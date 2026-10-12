@@ -4,6 +4,8 @@ VibeLog là nhật ký nhỏ dành cho hành trình học và vibe code. Bạn c
 
 Bạn cũng có thể sửa, tìm kiếm và lọc các phiên học đã ghi. Hình Doro trong thư mục `image` được dùng làm favicon và biểu tượng của dự án.
 
+VibeLog còn hỗ trợ đặt mục tiêu số phút học mỗi tuần và tải toàn bộ nhật ký xuống file JSON để sao lưu.
+
 ## Chạy dự án
 
 Bạn cần cài Node.js. Trong thư mục dự án, chạy:

@@ -101,11 +101,36 @@ h1 em { color: var(--lime); font-weight: inherit; }
 .stats strong { display: block; font-family: "Fraunces", serif; font-size: 42px; line-height: 1; }
 .stats span { color: var(--muted); font-size: 14px; }
 
+.weekly-goal {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 30px;
+  margin-top: 34px;
+  padding: 24px 28px;
+  border: 1px solid var(--line);
+  background: rgba(255,253,248,.55);
+}
+.goal-copy { display: flex; align-items: center; gap: 14px; min-width: 245px; }
+.goal-icon { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; background: var(--lime); color: var(--green); font-size: 20px; font-weight: 700; }
+.goal-copy p { margin: 0 0 2px; color: var(--green); font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.goal-copy h2 { margin: 0; font-family: "Fraunces", serif; font-size: 22px; }
+.progress-track { height: 9px; overflow: hidden; border-radius: 20px; background: rgba(49,92,69,.12); }
+.progress-track span { display: block; width: 0; height: 100%; border-radius: inherit; background: var(--green); transition: width .4s ease; }
+.goal-progress-area p { margin: 7px 0 0; color: var(--muted); font-size: 12px; }
+.goal-setting { display: grid; gap: 4px; color: var(--muted); font-size: 11px; font-weight: 600; }
+.goal-setting span { display: flex; align-items: center; gap: 6px; }
+.goal-setting input { width: 76px; padding: 8px; background: var(--paper); }
+
 .workspace { display: grid; grid-template-columns: .92fr 1.08fr; gap: 70px; padding-block: 110px; }
 .section-heading { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; }
 .section-heading > span { display: grid; place-items: center; width: 42px; height: 42px; border: 1px solid var(--line); border-radius: 50%; color: var(--green); font-size: 12px; font-weight: 700; }
 .section-heading p { margin: 0 0 3px; color: var(--green); }
 .section-heading h2 { margin: 0; font-family: "Fraunces", serif; font-size: 30px; }
+.journal-heading-row { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.backup-button { display: inline-flex; align-items: center; gap: 6px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 4px; background: transparent; color: var(--green); font-size: 12px; font-weight: 700; cursor: pointer; }
+.backup-button:hover:not(:disabled) { border-color: var(--green); background: rgba(49,92,69,.06); }
+.backup-button:disabled { opacity: .45; cursor: not-allowed; }
 
 form label { display: grid; gap: 8px; margin-bottom: 20px; font-size: 14px; font-weight: 600; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -158,6 +183,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--green); box-shad
 .empty-state p { max-width: 310px; margin: auto; color: var(--muted); font-size: 14px; }
 
 footer { padding-block: 28px 46px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; text-align: center; }
+.toast { position: fixed; z-index: 10; right: 24px; bottom: 24px; max-width: min(360px, calc(100% - 48px)); padding: 13px 17px; border-radius: 4px; background: var(--ink); color: white; box-shadow: var(--shadow); font-size: 13px; }
 
 @media (max-width: 760px) {
   .hero { min-height: 560px; }
@@ -167,6 +193,8 @@ footer { padding-block: 28px 46px; border-top: 1px solid var(--line); color: var
   .stats article:last-child { border-bottom: 0; }
   .stats strong { font-size: 34px; }
   .workspace { grid-template-columns: 1fr; gap: 70px; padding-block: 80px; }
+  .weekly-goal { grid-template-columns: 1fr; gap: 18px; }
+  .goal-setting { justify-self: start; }
 }
 
 @media (max-width: 460px) {
@@ -175,5 +203,8 @@ footer { padding-block: 28px 46px; border-top: 1px solid var(--line); color: var
   .form-row { grid-template-columns: 1fr; gap: 0; }
   .form-actions { flex-direction: column; }
   .journal-tools { grid-template-columns: 1fr; }
+  .journal-heading-row { align-items: flex-start; }
+  .journal-heading-row .section-heading { margin-bottom: 22px; }
+  .backup-button { padding-inline: 10px; }
 }
 

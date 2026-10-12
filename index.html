@@ -45,6 +45,29 @@
         </article>
       </section>
 
+      <section class="weekly-goal" aria-labelledby="weekly-goal-title">
+        <div class="goal-copy">
+          <span class="goal-icon" aria-hidden="true">↗</span>
+          <div>
+            <p>Nhịp học tuần này</p>
+            <h2 id="weekly-goal-title"><strong id="weekly-minutes">0</strong> / <span id="weekly-goal-value">180</span> phút</h2>
+          </div>
+        </div>
+        <div class="goal-progress-area">
+          <div class="progress-track" role="progressbar" aria-label="Tiến độ mục tiêu tuần" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <span id="weekly-progress"></span>
+          </div>
+          <p id="weekly-message">Bắt đầu một phiên học để tiến gần mục tiêu.</p>
+        </div>
+        <label class="goal-setting">
+          Mục tiêu
+          <span>
+            <input id="weekly-goal-input" type="number" min="30" max="10080" step="30" value="180" />
+            phút
+          </span>
+        </label>
+      </section>
+
       <section class="workspace">
         <div class="form-panel" id="new-entry">
           <div class="section-heading">
@@ -108,12 +131,17 @@
         </div>
 
         <div class="journal-panel">
-          <div class="section-heading">
-            <span>02</span>
-            <div>
-              <p>Nhìn lại</p>
-              <h2>Nhật ký gần đây</h2>
+          <div class="journal-heading-row">
+            <div class="section-heading">
+              <span>02</span>
+              <div>
+                <p>Nhìn lại</p>
+                <h2>Nhật ký gần đây</h2>
+              </div>
             </div>
+            <button class="backup-button" id="backup-data" type="button" title="Tải toàn bộ nhật ký xuống máy">
+              <span aria-hidden="true">↓</span> Sao lưu
+            </button>
           </div>
 
           <div class="journal-tools" aria-label="Tìm kiếm và lọc nhật ký">
@@ -150,6 +178,8 @@
     <footer class="container">
       <p>Được làm bằng sự tò mò, vài lần sửa lỗi và một chút ✦ vibe.</p>
     </footer>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
     <template id="empty-state-template">
       <div class="empty-state">

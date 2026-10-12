@@ -1,4 +1,14 @@
-import { calculateStats, filterEntries, loadEntries, saveEntries } from "./store.js";
+import {
+  calculateStats,
+  calculateWeeklyProgress,
+  createBackup,
+  filterEntries,
+  loadEntries,
+  loadWeeklyGoal,
+  saveEntries,
+  saveWeeklyGoal,
+  toLocalDateKey,
+} from "./store.js";
 
 const moodLabels = {
   flow: "✨ Vào guồng",
@@ -13,8 +23,15 @@ const searchInput = document.querySelector("#search-entry");
 const moodFilter = document.querySelector("#mood-filter");
 const cancelEditButton = document.querySelector("#cancel-edit");
 const clearFiltersButton = document.querySelector("#clear-filters");
+const goalInput = document.querySelector("#weekly-goal-input");
+const backupButton = document.querySelector("#backup-data");
+const toast = document.querySelector("#toast");
 let entries = loadEntries();
+let weeklyGoal = loadWeeklyGoal();
 let editingId = null;
+let toastTimer;
+
+goalInput.value = weeklyGoal;
 
 document.querySelector("#today").textContent = new Intl.DateTimeFormat("vi-VN", {
   weekday: "long",
@@ -72,12 +89,53 @@ clearFiltersButton.addEventListener("click", () => {
   renderEntries();
 });
 
+goalInput.addEventListener("change", () => {
+  const nextGoal = Number(goalInput.value);
+  if (!Number.isFinite(nextGoal) || nextGoal < 30 || nextGoal > 10080) {
+    goalInput.value = weeklyGoal;
+    showToast("Mục tiêu cần nằm trong khoảng 30–10.080 phút.");
+    return;
+  }
+
+  weeklyGoal = nextGoal;
+  saveWeeklyGoal(weeklyGoal);
+  renderWeeklyGoal();
+  showToast("Đã cập nhật mục tiêu tuần.");
+});
+
+backupButton.addEventListener("click", () => {
+  if (entries.length === 0) return;
+  const backup = createBackup(entries);
+  const file = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(file);
+  const download = document.createElement("a");
+  download.href = url;
+  download.download = `vibelog-backup-${toLocalDateKey(new Date())}.json`;
+  download.click();
+  URL.revokeObjectURL(url);
+  showToast(`Đã sao lưu ${entries.length} phiên học.`);
+});
+
 function render() {
   renderEntries();
+  renderWeeklyGoal();
   const stats = calculateStats(entries);
   document.querySelector("#total-sessions").textContent = stats.sessions;
   document.querySelector("#total-minutes").textContent = stats.minutes;
   document.querySelector("#current-streak").textContent = stats.streak;
+}
+
+function renderWeeklyGoal() {
+  const progress = calculateWeeklyProgress(entries, weeklyGoal);
+  document.querySelector("#weekly-minutes").textContent = progress.minutes;
+  document.querySelector("#weekly-goal-value").textContent = weeklyGoal;
+  document.querySelector("#weekly-progress").style.width = `${progress.percent}%`;
+  const progressTrack = document.querySelector(".progress-track");
+  progressTrack.setAttribute("aria-valuenow", progress.percent);
+  document.querySelector("#weekly-message").textContent = progress.remaining === 0
+    ? "Hoàn thành mục tiêu — tuyệt lắm! Bạn có thể nghỉ ngơi không áy náy."
+    : `Còn ${progress.remaining} phút để hoàn thành mục tiêu tuần.`;
+  backupButton.disabled = entries.length === 0;
 }
 
 function renderEntries() {
@@ -164,6 +222,15 @@ function createElement(tag, className, text) {
 
 function formatDate(date) {
   return new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(date));
+}
+
+function showToast(message) {
+  window.clearTimeout(toastTimer);
+  toast.textContent = message;
+  toast.hidden = false;
+  toastTimer = window.setTimeout(() => {
+    toast.hidden = true;
+  }, 2600);
 }
 
 render();
