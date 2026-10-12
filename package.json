@@ -1,0 +1,12 @@
+{
+  "name": "vibelog",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A tiny learning journal for a first vibe-coding project.",
+  "scripts": {
+    "start": "node scripts/server.mjs",
+    "test": "node --test"
+  }
+}
+
