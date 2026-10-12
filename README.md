@@ -2,6 +2,8 @@
 
 VibeLog là nhật ký nhỏ dành cho hành trình học và vibe code. Bạn có thể ghi lại mình vừa làm gì, học trong bao lâu, cảm thấy thế nào và rút ra điều gì. Dữ liệu được lưu trong trình duyệt bằng `localStorage`.
 
+Bạn cũng có thể sửa, tìm kiếm và lọc các phiên học đã ghi. Hình Doro trong thư mục `image` được dùng làm favicon và biểu tượng của dự án.
+
 ## Chạy dự án
 
 Bạn cần cài Node.js. Trong thư mục dự án, chạy:

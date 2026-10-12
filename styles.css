@@ -47,8 +47,9 @@ button, input, select, textarea { font: inherit; }
 .hero::after { width: 280px; height: 280px; right: 30px; top: 220px; }
 
 .nav { display: flex; justify-content: space-between; align-items: center; padding-block: 28px; }
-.brand { color: inherit; text-decoration: none; font-size: 22px; font-weight: 700; letter-spacing: -.8px; }
-.brand span { color: var(--lime); }
+.brand { display: inline-flex; align-items: center; gap: 10px; color: inherit; text-decoration: none; font-size: 22px; font-weight: 700; letter-spacing: -.8px; }
+.brand img { width: 42px; height: 42px; border: 2px solid rgba(255,255,255,.7); border-radius: 50%; object-fit: cover; background: #111; }
+.brand-name > span { color: var(--lime); }
 .today { color: rgba(255,255,255,.68); font-size: 14px; text-transform: capitalize; }
 
 .hero-content { position: relative; z-index: 1; padding-block: 90px 120px; }
@@ -68,7 +69,7 @@ h1 {
 h1 em { color: var(--lime); font-weight: inherit; }
 .hero-copy { max-width: 530px; color: rgba(255,255,255,.72); font-size: 18px; }
 
-.primary-button, .submit-button {
+.primary-button, .submit-button, .cancel-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -122,19 +123,34 @@ input, select, textarea {
 
 textarea { resize: vertical; }
 input:focus, select:focus, textarea:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(49,92,69,.1); }
-.submit-button { width: 100%; padding: 15px 20px; background: var(--green); color: white; }
-.submit-button span { margin-left: auto; font-size: 20px; }
+.form-actions { display: flex; gap: 10px; }
+.submit-button { flex: 1; padding: 15px 20px; background: var(--green); color: white; }
+.submit-button span:last-child { margin-left: auto; font-size: 20px; }
+.cancel-button { padding: 15px 18px; border: 1px solid var(--line); background: transparent; color: var(--muted); }
+.cancel-button:hover { background: var(--paper); color: var(--ink); }
 .privacy-note { margin: 10px 0 0; color: var(--muted); font-size: 12px; text-align: center; }
 
+.journal-tools { display: grid; grid-template-columns: 1fr 160px; gap: 10px; }
+.search-box { position: relative; }
+.search-box > span { position: absolute; z-index: 1; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 22px; pointer-events: none; }
+.search-box input { padding-left: 42px; }
+.filter-box select { height: 100%; }
+.results-summary { display: flex; justify-content: space-between; align-items: center; min-height: 36px; padding-block: 7px; color: var(--muted); font-size: 12px; }
+.results-summary button { border: 0; background: transparent; color: var(--green); font-weight: 700; cursor: pointer; }
+.results-summary button:hover { text-decoration: underline; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
 .entry-list { display: grid; gap: 14px; }
-.entry-card { position: relative; padding: 22px 56px 22px 22px; border: 1px solid var(--line); background: rgba(255,253,248,.65); }
+.entry-card { position: relative; padding: 22px; border: 1px solid var(--line); background: rgba(255,253,248,.65); }
 .entry-card:hover { background: var(--paper); }
 .entry-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; color: var(--muted); font-size: 12px; }
 .mood { padding: 3px 8px; border-radius: 20px; background: var(--lime); color: var(--ink); }
 .entry-card h3 { margin: 12px 0 6px; font-family: "Fraunces", serif; font-size: 21px; }
 .entry-card p { margin: 0; color: var(--muted); font-size: 14px; }
-.delete-button { position: absolute; top: 18px; right: 18px; width: 30px; height: 30px; border: 0; border-radius: 50%; background: transparent; color: var(--muted); cursor: pointer; }
-.delete-button:hover { background: #f1e2dd; color: #8c392c; }
+.entry-actions { display: flex; gap: 6px; margin-top: 16px; }
+.entry-actions button { padding: 6px 10px; border: 1px solid var(--line); border-radius: 4px; background: transparent; color: var(--muted); font-size: 12px; font-weight: 600; cursor: pointer; }
+.edit-button:hover { border-color: var(--green); color: var(--green); background: rgba(49,92,69,.06); }
+.delete-button:hover { border-color: #b97064; background: #f1e2dd; color: #8c392c; }
 
 .empty-state { padding: 64px 28px; border: 1px dashed var(--line); text-align: center; }
 .empty-state span { color: var(--green); font-size: 36px; }
@@ -157,5 +173,7 @@ footer { padding-block: 28px 46px; border-top: 1px solid var(--line); color: var
   .container { width: min(100% - 28px, 1120px); }
   .today { display: none; }
   .form-row { grid-template-columns: 1fr; gap: 0; }
+  .form-actions { flex-direction: column; }
+  .journal-tools { grid-template-columns: 1fr; }
 }
 

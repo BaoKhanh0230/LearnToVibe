@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { calculateStats, loadEntries, saveEntries, STORAGE_KEY } from "../src/store.js";
+import { calculateStats, filterEntries, loadEntries, saveEntries, STORAGE_KEY } from "../src/store.js";
 
 function memoryStorage(initialValue = null) {
   const values = new Map();
@@ -33,5 +33,22 @@ test("tính tổng phiên, phút và chuỗi ngày", () => {
     minutes: 80,
     streak: 2,
   });
+});
+
+test("tìm kiếm không phân biệt chữ hoa, chữ thường và dấu tiếng Việt", () => {
+  const entries = [
+    { title: "Học JavaScript", learning: "Biết cách lưu dữ liệu", mood: "curious" },
+    { title: "Sửa giao diện", learning: "CSS Grid", mood: "flow" },
+  ];
+  assert.deepEqual(filterEntries(entries, "cach luu", "all"), [entries[0]]);
+  assert.deepEqual(filterEntries(entries, "JAVASCRIPT", "all"), [entries[0]]);
+});
+
+test("lọc nhật ký theo cảm giác và kết hợp từ khóa", () => {
+  const entries = [
+    { title: "Học JavaScript", learning: "localStorage", mood: "curious" },
+    { title: "Sửa JavaScript", learning: "event", mood: "flow" },
+  ];
+  assert.deepEqual(filterEntries(entries, "javascript", "flow"), [entries[1]]);
 });
 

@@ -5,12 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="VibeLog — nhật ký học và vibe code mỗi ngày." />
     <title>VibeLog — Nhật ký vibe code</title>
+    <link rel="icon" type="image/jpeg" href="image/Doro.jpg" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <header class="hero">
       <nav class="nav container" aria-label="Điều hướng chính">
-        <a class="brand" href="#">Vibe<span>Log</span></a>
+        <a class="brand" href="#" aria-label="VibeLog — về đầu trang">
+          <img src="image/Doro.jpg" alt="" />
+          <span class="brand-name">Vibe<span>Log</span></span>
+        </a>
         <span class="today" id="today"></span>
       </nav>
 
@@ -46,8 +50,8 @@
           <div class="section-heading">
             <span>01</span>
             <div>
-              <p>Check-in</p>
-              <h2>Thêm một phiên học</h2>
+              <p id="form-eyebrow">Check-in</p>
+              <h2 id="form-title">Thêm một phiên học</h2>
             </div>
           </div>
 
@@ -92,7 +96,13 @@
               ></textarea>
             </label>
 
-            <button class="submit-button" type="submit">Lưu vào nhật ký <span>→</span></button>
+            <div class="form-actions">
+              <button class="submit-button" type="submit">
+                <span id="submit-label">Lưu vào nhật ký</span>
+                <span aria-hidden="true">→</span>
+              </button>
+              <button class="cancel-button" id="cancel-edit" type="button" hidden>Hủy sửa</button>
+            </div>
             <p class="privacy-note">Dữ liệu hiện chỉ được lưu trong trình duyệt của bạn.</p>
           </form>
         </div>
@@ -104,6 +114,32 @@
               <p>Nhìn lại</p>
               <h2>Nhật ký gần đây</h2>
             </div>
+          </div>
+
+          <div class="journal-tools" aria-label="Tìm kiếm và lọc nhật ký">
+            <label class="search-box" for="search-entry">
+              <span aria-hidden="true">⌕</span>
+              <input
+                id="search-entry"
+                type="search"
+                placeholder="Tìm việc đã làm hoặc bài học..."
+                autocomplete="off"
+              />
+            </label>
+            <label class="filter-box">
+              <span class="visually-hidden">Lọc theo cảm giác</span>
+              <select id="mood-filter">
+                <option value="all">Mọi cảm giác</option>
+                <option value="flow">✨ Vào guồng</option>
+                <option value="curious">🧭 Tò mò</option>
+                <option value="stuck">🧩 Hơi bí</option>
+                <option value="proud">🚀 Tự hào</option>
+              </select>
+            </label>
+          </div>
+          <div class="results-summary">
+            <span id="results-count">0 phiên học</span>
+            <button id="clear-filters" type="button" hidden>Xóa bộ lọc</button>
           </div>
 
           <div id="entry-list" class="entry-list" aria-live="polite"></div>

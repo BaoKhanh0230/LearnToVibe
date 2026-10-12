@@ -13,6 +13,25 @@ export function saveEntries(entries, storage = localStorage) {
   storage.setItem(STORAGE_KEY, JSON.stringify(entries));
 }
 
+export function filterEntries(entries, query = "", mood = "all") {
+  const normalizedQuery = normalizeText(query.trim());
+
+  return entries.filter((entry) => {
+    const matchesMood = mood === "all" || entry.mood === mood;
+    const searchableText = normalizeText(`${entry.title ?? ""} ${entry.learning ?? ""}`);
+    const matchesQuery = normalizedQuery === "" || searchableText.includes(normalizedQuery);
+    return matchesMood && matchesQuery;
+  });
+}
+
+function normalizeText(value) {
+  return value
+    .toLocaleLowerCase("vi")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d");
+}
+
 export function calculateStats(entries, now = new Date()) {
   const uniqueDays = new Set(entries.map((entry) => entry.createdAt.slice(0, 10)));
   let streak = 0;
