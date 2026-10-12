@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="VibeLog — nhật ký học và vibe code mỗi ngày." />
     <title>VibeLog — Nhật ký vibe code</title>
+    <script>
+      (() => {
+        const savedTheme = localStorage.getItem("vibelog.theme.v1");
+        const systemTheme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.dataset.theme = savedTheme || systemTheme;
+      })();
+    </script>
     <link rel="icon" type="image/jpeg" href="image/Doro.jpg" />
     <link rel="stylesheet" href="styles.css" />
   </head>
@@ -15,7 +22,14 @@
           <img src="image/Doro.jpg" alt="" />
           <span class="brand-name">Vibe<span>Log</span></span>
         </a>
-        <span class="today" id="today"></span>
+        <div class="nav-actions">
+          <span class="today" id="today"></span>
+          <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Chuyển sang chế độ tối" aria-pressed="false">
+            <span class="theme-icon" aria-hidden="true">☀</span>
+            <span class="toggle-track" aria-hidden="true"><span></span></span>
+            <span class="theme-icon" aria-hidden="true">☾</span>
+          </button>
+        </div>
       </nav>
 
       <div class="hero-content container">
@@ -68,6 +82,78 @@
         </label>
       </section>
 
+      <section class="learning-insights" aria-labelledby="insights-title">
+        <div class="insights-heading">
+          <div>
+            <p>Thứ Hai — Chủ nhật</p>
+            <h2 id="insights-title">Bức tranh học tập</h2>
+          </div>
+          <span>Dữ liệu tự cập nhật từ nhật ký</span>
+        </div>
+
+        <div class="insights-grid">
+          <div class="chart-panel">
+            <div class="chart-summary">
+              <div>
+                <strong id="insight-total">0</strong>
+                <span>phút đã học</span>
+              </div>
+              <p id="chart-description">Thêm phiên học để biểu đồ bắt đầu chuyển động.</p>
+            </div>
+            <div class="bar-chart" id="learning-chart" aria-label="Biểu đồ số phút học trong 7 ngày gần nhất"></div>
+          </div>
+
+          <div class="insight-cards">
+            <article>
+              <span>Trung bình mỗi ngày</span>
+              <strong><span id="insight-average">0</span> phút</strong>
+            </article>
+            <article>
+              <span>Ngày tập trung nhất</span>
+              <strong id="insight-best-day">Chưa có</strong>
+            </article>
+            <article>
+              <span>Chủ đề nổi bật</span>
+              <strong id="insight-top-topic">Chưa có</strong>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="habit-reminder" aria-labelledby="reminder-title">
+        <div class="reminder-intro">
+          <span class="reminder-icon" aria-hidden="true">◷</span>
+          <div>
+            <p>Tạo nhịp đều đặn</p>
+            <h2 id="reminder-title">Nhắc học mỗi ngày</h2>
+            <span id="reminder-status">Chưa bật lịch nhắc</span>
+          </div>
+        </div>
+
+        <div class="reminder-settings">
+          <label class="reminder-time">
+            Giờ nhắc
+            <input id="reminder-time" type="time" value="20:00" />
+          </label>
+          <div class="reminder-days" aria-label="Chọn ngày nhắc học">
+            <button type="button" data-reminder-day="1">T2</button>
+            <button type="button" data-reminder-day="2">T3</button>
+            <button type="button" data-reminder-day="3">T4</button>
+            <button type="button" data-reminder-day="4">T5</button>
+            <button type="button" data-reminder-day="5">T6</button>
+            <button type="button" data-reminder-day="6">T7</button>
+            <button type="button" data-reminder-day="0">CN</button>
+          </div>
+        </div>
+
+        <label class="reminder-switch">
+          <input id="reminder-enabled" type="checkbox" />
+          <span class="switch-track" aria-hidden="true"><span></span></span>
+          <span>Bật nhắc học</span>
+        </label>
+        <p class="reminder-note">Thông báo được kiểm tra khi VibeLog đang mở trên trình duyệt.</p>
+      </section>
+
       <section class="workspace">
         <div class="form-panel" id="new-entry">
           <div class="section-heading">
@@ -104,6 +190,25 @@
                   <option value="stuck">🧩 Hơi bí</option>
                   <option value="proud">🚀 Tự hào</option>
                 </select>
+              </label>
+            </div>
+
+            <div class="form-row">
+              <label>
+                Chủ đề chính
+                <select id="topic" name="topic">
+                  <option value="frontend">Giao diện / Frontend</option>
+                  <option value="backend">Backend / API</option>
+                  <option value="data">Dữ liệu</option>
+                  <option value="tools">Git & Công cụ</option>
+                  <option value="design">Thiết kế / UX</option>
+                  <option value="other">Khác</option>
+                </select>
+              </label>
+              <label>
+                Tag
+                <input id="tags" name="tags" type="text" maxlength="180" placeholder="HTML, CSS, Git..." />
+                <small>Phân cách nhiều tag bằng dấu phẩy.</small>
               </label>
             </div>
 
@@ -162,6 +267,18 @@
                 <option value="curious">🧭 Tò mò</option>
                 <option value="stuck">🧩 Hơi bí</option>
                 <option value="proud">🚀 Tự hào</option>
+              </select>
+            </label>
+            <label class="filter-box">
+              <span class="visually-hidden">Lọc theo chủ đề</span>
+              <select id="topic-filter">
+                <option value="all">Mọi chủ đề</option>
+                <option value="frontend">Giao diện</option>
+                <option value="backend">Backend</option>
+                <option value="data">Dữ liệu</option>
+                <option value="tools">Git & Công cụ</option>
+                <option value="design">Thiết kế / UX</option>
+                <option value="other">Khác / Chưa phân loại</option>
               </select>
             </label>
           </div>

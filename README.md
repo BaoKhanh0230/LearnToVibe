@@ -6,6 +6,10 @@ Bạn cũng có thể sửa, tìm kiếm và lọc các phiên học đã ghi. H
 
 VibeLog còn hỗ trợ đặt mục tiêu số phút học mỗi tuần và tải toàn bộ nhật ký xuống file JSON để sao lưu.
 
+Dashboard 7 ngày giúp nhìn nhanh tổng thời gian, trung bình, ngày tập trung nhất và chủ đề nổi bật. Mỗi phiên học có thể được phân loại theo chủ đề, gắn tối đa 8 tag và lọc lại trong nhật ký.
+
+Biểu đồ tuần bắt đầu từ Thứ Hai. Giao diện hỗ trợ chế độ sáng/tối và chuyển màu mượt; lịch nhắc học có thể tùy chỉnh giờ cùng các ngày trong tuần khi VibeLog đang mở.
+
 ## Chạy dự án
 
 Bạn cần cài Node.js. Trong thư mục dự án, chạy:
