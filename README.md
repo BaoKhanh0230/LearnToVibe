@@ -10,6 +10,22 @@ Dashboard 7 ngày giúp nhìn nhanh tổng thời gian, trung bình, ngày tập
 
 Biểu đồ tuần bắt đầu từ Thứ Hai. Giao diện hỗ trợ chế độ sáng/tối và chuyển màu mượt; lịch nhắc học có thể tùy chỉnh giờ cùng các ngày trong tuần khi VibeLog đang mở.
 
+Trải nghiệm cuộn sử dụng Lenis trên desktop và GSAP ScrollTrigger cho page entrance, scroll reveal, parallax nhẹ, tiến độ cuộn và animation biểu đồ. Nếu hệ thống bật `prefers-reduced-motion`, các hiệu ứng nâng cao sẽ tự tắt.
+
+Nút `〰` trên thanh điều hướng cho phép bật hoặc tắt chuyển động riêng trong VibeLog. Chuyển động được bật mặc định và lựa chọn của người dùng được lưu trong trình duyệt.
+
+## CI/CD với GitHub Actions
+
+Workflow tại `.github/workflows/ci-cd.yml` tự động chạy khi push hoặc mở pull request vào `main`:
+
+1. Tải source code vào máy ảo Ubuntu của GitHub.
+2. Cài đúng phiên bản Node.js.
+3. Kiểm tra cú pháp JavaScript.
+4. Chạy toàn bộ kiểm thử bằng `npm test`.
+5. Nếu chạy trên `main`, kiểm thử đạt và repository variable `ENABLE_PAGES` là `true`, đóng gói website rồi triển khai lên GitHub Pages.
+
+Để bật deployment, vào `Settings → Pages`, chọn nguồn `GitHub Actions`; sau đó vào `Settings → Secrets and variables → Actions → Variables`, tạo biến `ENABLE_PAGES` với giá trị `true`. Chạy lại workflow hoặc push một commit mới để xuất bản.
+
 ## Chạy dự án
 
 Bạn cần cài Node.js. Trong thư mục dự án, chạy:

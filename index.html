@@ -10,12 +10,15 @@
         const savedTheme = localStorage.getItem("vibelog.theme.v1");
         const systemTheme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
         document.documentElement.dataset.theme = savedTheme || systemTheme;
+        const savedMotion = localStorage.getItem("vibelog.motion.v1");
+        document.documentElement.dataset.motion = savedMotion || "full";
       })();
     </script>
     <link rel="icon" type="image/jpeg" href="image/Doro.jpg" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <div class="scroll-progress" aria-hidden="true"><span></span></div>
     <header class="hero">
       <nav class="nav container" aria-label="Điều hướng chính">
         <a class="brand" href="#" aria-label="VibeLog — về đầu trang">
@@ -24,6 +27,10 @@
         </a>
         <div class="nav-actions">
           <span class="today" id="today"></span>
+          <button class="motion-toggle" id="motion-toggle" type="button" aria-pressed="false">
+            <span aria-hidden="true">〰</span>
+            <span class="motion-status" aria-hidden="true"></span>
+          </button>
           <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Chuyển sang chế độ tối" aria-pressed="false">
             <span class="theme-icon" aria-hidden="true">☀</span>
             <span class="toggle-track" aria-hidden="true"><span></span></span>
@@ -59,7 +66,7 @@
         </article>
       </section>
 
-      <section class="weekly-goal" aria-labelledby="weekly-goal-title">
+      <section class="weekly-goal" aria-labelledby="weekly-goal-title" data-reveal="up">
         <div class="goal-copy">
           <span class="goal-icon" aria-hidden="true">↗</span>
           <div>
@@ -92,7 +99,7 @@
         </div>
 
         <div class="insights-grid">
-          <div class="chart-panel">
+          <div class="chart-panel" data-reveal="up">
             <div class="chart-summary">
               <div>
                 <strong id="insight-total">0</strong>
@@ -103,7 +110,7 @@
             <div class="bar-chart" id="learning-chart" aria-label="Biểu đồ số phút học trong 7 ngày gần nhất"></div>
           </div>
 
-          <div class="insight-cards">
+          <div class="insight-cards" data-reveal="stagger">
             <article>
               <span>Trung bình mỗi ngày</span>
               <strong><span id="insight-average">0</span> phút</strong>
@@ -120,7 +127,7 @@
         </div>
       </section>
 
-      <section class="habit-reminder" aria-labelledby="reminder-title">
+      <section class="habit-reminder" aria-labelledby="reminder-title" data-reveal="up">
         <div class="reminder-intro">
           <span class="reminder-icon" aria-hidden="true">◷</span>
           <div>
@@ -155,7 +162,7 @@
       </section>
 
       <section class="workspace">
-        <div class="form-panel" id="new-entry">
+        <div class="form-panel" id="new-entry" data-reveal="up">
           <div class="section-heading">
             <span>01</span>
             <div>
@@ -235,7 +242,7 @@
           </form>
         </div>
 
-        <div class="journal-panel">
+        <div class="journal-panel" data-reveal="up">
           <div class="journal-heading-row">
             <div class="section-heading">
               <span>02</span>
@@ -306,6 +313,9 @@
       </div>
     </template>
 
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lenis@1.3.26/dist/lenis.min.js"></script>
     <script type="module" src="src/app.js"></script>
   </body>
 </html>

@@ -14,6 +14,7 @@ import {
   saveWeeklyGoal,
   toLocalDateKey,
 } from "./store.js";
+import { animateChartBars, initializeMotion } from "./animations.js";
 
 const moodLabels = {
   flow: "✨ Vào guồng",
@@ -42,6 +43,7 @@ const goalInput = document.querySelector("#weekly-goal-input");
 const backupButton = document.querySelector("#backup-data");
 const toast = document.querySelector("#toast");
 const themeToggle = document.querySelector("#theme-toggle");
+const motionToggle = document.querySelector("#motion-toggle");
 const reminderEnabled = document.querySelector("#reminder-enabled");
 const reminderTime = document.querySelector("#reminder-time");
 const reminderDayButtons = [...document.querySelectorAll("[data-reminder-day]")];
@@ -53,6 +55,7 @@ let toastTimer;
 
 goalInput.value = weeklyGoal;
 renderThemeToggle();
+renderMotionToggle();
 renderReminderSettings();
 
 document.querySelector("#today").textContent = new Intl.DateTimeFormat("vi-VN", {
@@ -151,6 +154,14 @@ themeToggle.addEventListener("click", () => {
   window.setTimeout(() => document.documentElement.classList.remove("theme-transition"), 450);
 });
 
+motionToggle.addEventListener("click", () => {
+  const nextMotion = document.documentElement.dataset.motion === "full" ? "reduced" : "full";
+  localStorage.setItem("vibelog.motion.v1", nextMotion);
+  document.documentElement.dataset.motion = nextMotion;
+  renderMotionToggle();
+  window.location.reload();
+});
+
 reminderEnabled.addEventListener("change", async () => {
   reminder.enabled = reminderEnabled.checked;
   if (reminder.enabled && "Notification" in window && Notification.permission === "default") {
@@ -236,6 +247,7 @@ function renderLearningInsights() {
   document.querySelector("#chart-description").textContent = insights.total > 0
     ? `${insights.days.filter((day) => day.minutes > 0).length} ngày có hoạt động trong tuần này.`
     : "Thêm phiên học để biểu đồ bắt đầu chuyển động.";
+  animateChartBars();
 }
 
 function renderWeeklyGoal() {
@@ -355,6 +367,18 @@ function renderThemeToggle() {
   themeToggle.setAttribute("aria-label", isDark ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối");
 }
 
+function renderMotionToggle() {
+  const motionIsEnabled = document.documentElement.dataset.motion === "full";
+  motionToggle.setAttribute("aria-pressed", String(motionIsEnabled));
+  motionToggle.setAttribute(
+    "aria-label",
+    motionIsEnabled ? "Tắt chuyển động nâng cao" : "Bật chuyển động nâng cao",
+  );
+  motionToggle.title = motionIsEnabled
+    ? "Chuyển động đang bật"
+    : "Chuyển động đang tắt — nhấn để trải nghiệm animation";
+}
+
 function renderReminderSettings() {
   reminderEnabled.checked = reminder.enabled;
   reminderTime.value = reminder.time;
@@ -396,6 +420,13 @@ function showToast(message) {
 }
 
 render();
+initializeMotion();
 checkReminder();
 window.setInterval(checkReminder, 30_000);
+
+if (document.documentElement.dataset.motion === "reduced") {
+  window.setTimeout(() => {
+    showToast("Thiết bị đang giảm chuyển động. Nhấn nút 〰 trên thanh điều hướng để bật animation.");
+  }, 700);
+}
 
