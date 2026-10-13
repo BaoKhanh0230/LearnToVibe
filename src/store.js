@@ -87,7 +87,7 @@ function normalizeText(value) {
 }
 
 export function calculateStats(entries, now = new Date()) {
-  const uniqueDays = new Set(entries.map((entry) => entry.createdAt.slice(0, 10)));
+  const uniqueDays = new Set(entries.map((entry) => toLocalDateKey(new Date(entry.startedAt ?? entry.createdAt))));
   let streak = 0;
   const cursor = new Date(now);
 
@@ -115,7 +115,7 @@ export function calculateWeeklyProgress(entries, goal, now = new Date()) {
   startOfNextWeek.setDate(startOfNextWeek.getDate() + 7);
 
   const minutes = entries.reduce((total, entry) => {
-    const createdAt = new Date(entry.createdAt);
+    const createdAt = new Date(entry.startedAt ?? entry.createdAt);
     const isThisWeek = createdAt >= startOfWeek && createdAt < startOfNextWeek;
     return isThisWeek ? total + Number(entry.minutes || 0) : total;
   }, 0);
@@ -146,7 +146,7 @@ export function calculateLearningInsights(entries, now = new Date()) {
   const topicMinutes = new Map();
 
   entries.forEach((entry) => {
-    const createdAt = new Date(entry.createdAt);
+    const createdAt = new Date(entry.startedAt ?? entry.createdAt);
     if (Number.isNaN(createdAt.getTime())) return;
     const day = daysByDate.get(toLocalDateKey(createdAt));
     if (!day) return;

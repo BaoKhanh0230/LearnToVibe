@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="vi">
+<html lang="vi" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,61 +7,78 @@
     <title>VibeLog — Nhật ký vibe code</title>
     <script>
       (() => {
-        const savedTheme = localStorage.getItem("vibelog.theme.v1");
-        const systemTheme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-        document.documentElement.dataset.theme = savedTheme || systemTheme;
+        document.documentElement.dataset.theme = "dark";
         const savedMotion = localStorage.getItem("vibelog.motion.v1");
-        document.documentElement.dataset.motion = savedMotion || "full";
+        document.documentElement.dataset.motion = savedMotion === "full" || savedMotion === "reduced"
+          ? savedMotion : matchMedia("(prefers-reduced-motion: reduce)").matches ? "reduced" : "full";
       })();
     </script>
     <link rel="icon" type="image/jpeg" href="image/Doro.jpg" />
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="src/apple-design.css" />
+    <link rel="stylesheet" href="src/design-effects.css" />
+    <link rel="stylesheet" href="src/interface-motion.css" />
   </head>
   <body>
+    <div id="page-background" class="page-background" aria-hidden="true"></div>
     <div class="scroll-progress" aria-hidden="true"><span></span></div>
-    <header class="hero">
       <nav class="nav container" aria-label="Điều hướng chính">
         <a class="brand" href="#" aria-label="VibeLog — về đầu trang">
           <img src="image/Doro.jpg" alt="" />
           <span class="brand-name">Vibe<span>Log</span></span>
         </a>
         <div class="nav-actions">
+          <button id="open-command-palette" class="command-trigger" type="button" aria-label="Tìm nhanh nhật ký và thao tác, Ctrl hoặc Command K"><span data-icon="search"></span><span class="command-trigger-label">Tìm nhanh</span><kbd>⌘ / Ctrl K</kbd></button>
           <span class="today" id="today"></span>
           <button class="motion-toggle" id="motion-toggle" type="button" aria-pressed="false">
-            <span aria-hidden="true">〰</span>
+            <span data-icon="waves" aria-hidden="true"></span>
             <span class="motion-status" aria-hidden="true"></span>
-          </button>
-          <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Chuyển sang chế độ tối" aria-pressed="false">
-            <span class="theme-icon" aria-hidden="true">☀</span>
-            <span class="toggle-track" aria-hidden="true"><span></span></span>
-            <span class="theme-icon" aria-hidden="true">☾</span>
           </button>
         </div>
       </nav>
-
+    <header class="hero">
       <div class="hero-content container">
-        <p class="eyebrow">Học một chút · Làm một chút · Tiến bộ mỗi ngày</p>
-        <h1>Hôm nay bạn đã<br /><em>vibe</em> được gì?</h1>
-        <p class="hero-copy">
-          Ghi lại hành trình code của bạn — kể cả những lỗi ngớ ngẩn,
-          vì đó thường là nơi bài học hay nhất xuất hiện.
-        </p>
-        <a class="primary-button" href="#new-entry">Ghi phiên học hôm nay ↓</a>
+        <div class="hero-story">
+          <p class="eyebrow"><span class="hero-status-dot" aria-hidden="true"></span> Không gian cho hành trình học của bạn</p>
+          <h1><span class="hero-word">Hôm nay</span> <span class="hero-word">bạn đã</span><br /><em class="hero-word">vibe</em> <span class="hero-word">được gì?</span></h1>
+          <p class="hero-copy">Một ý tưởng mới. Một lỗi vừa sửa. Một điều vừa hiểu.<br /> Lưu những bước tiến nhỏ, để nhìn thấy mình đi xa.</p>
+          <div class="hero-cta-row">
+            <a class="primary-button" href="#new-entry">Ghi phiên học <span aria-hidden="true">↗</span></a>
+            <a class="hero-secondary-button" href="#study-calendar">Xem lịch của tôi <span aria-hidden="true">→</span></a>
+          </div>
+          <div class="hero-footnote"><span aria-hidden="true">✦</span> Học một chút. Làm một chút. Tiến bộ mỗi ngày.</div>
+        </div>
+        <div class="hero-focus" aria-label="Tiến độ học trong tuần">
+          <div id="hero-network" class="hero-network" aria-hidden="true"></div>
+          <div class="focus-overline"><span class="focus-dot" aria-hidden="true"></span> YOUR LEARNING SPACE <span aria-hidden="true">✦</span></div>
+          <div class="focus-center">
+            <p>Mỗi phiên học,<br />một kết nối mới.</p>
+            <span>Biến sự tò mò thành tiến bộ.</span>
+          </div>
+          <div class="focus-bottom">
+            <div><span>Đã học tuần này</span><strong><span id="hero-week-minutes" data-count-up>0</span> <small>phút</small></strong></div>
+            <div class="focus-progress"><span id="hero-week-percent">0%</span><small>mục tiêu tuần</small></div>
+          </div>
+          <div class="focus-progress-track" aria-hidden="true"><span id="hero-focus-progress"></span></div>
+        </div>
       </div>
     </header>
 
     <main class="container">
       <section class="stats" aria-label="Thống kê học tập">
-        <article>
-          <strong id="total-sessions">0</strong>
+        <article data-spotlight>
+          <span class="stat-kicker"><span aria-hidden="true">↗</span> HÀNH TRÌNH</span>
+          <strong id="total-sessions" data-count-up>0</strong>
           <span>phiên học</span>
         </article>
-        <article>
-          <strong id="total-minutes">0</strong>
+        <article data-spotlight>
+          <span class="stat-kicker"><span aria-hidden="true">◷</span> TẬP TRUNG</span>
+          <strong id="total-minutes" data-count-up>0</strong>
           <span>phút tập trung</span>
         </article>
-        <article>
-          <strong id="current-streak">0</strong>
+        <article data-spotlight>
+          <span class="stat-kicker"><span aria-hidden="true">✦</span> NHỊP ĐỀU ĐẶN</span>
+          <strong id="current-streak" data-count-up>0</strong>
           <span>ngày liên tiếp</span>
         </article>
       </section>
@@ -111,15 +128,15 @@
           </div>
 
           <div class="insight-cards" data-reveal="stagger">
-            <article>
+            <article data-spotlight>
               <span>Trung bình mỗi ngày</span>
               <strong><span id="insight-average">0</span> phút</strong>
             </article>
-            <article>
+            <article data-spotlight>
               <span>Ngày tập trung nhất</span>
               <strong id="insight-best-day">Chưa có</strong>
             </article>
-            <article>
+            <article data-spotlight>
               <span>Chủ đề nổi bật</span>
               <strong id="insight-top-topic">Chưa có</strong>
             </article>
@@ -161,6 +178,63 @@
         <p class="reminder-note">Thông báo được kiểm tra khi VibeLog đang mở trên trình duyệt.</p>
       </section>
 
+      <section class="calendar-panel" aria-labelledby="calendar-title" data-reveal="up">
+        <p class="eyebrow">Nhịp học trên lịch của bạn</p>
+        <h2 id="calendar-title">Google Calendar</h2>
+        <p>Ghi lại khung giờ đã học hoặc hẹn buổi tiếp theo trên lịch chính của tài khoản Google bạn chọn.</p>
+        <details>
+          <summary>Thiết lập kết nối Google</summary>
+          <p id="calendar-server-config">Đang kiểm tra cấu hình máy chủ…</p>
+          <p>Để bật ghi nhớ kết nối, điền Client ID và Client Secret vào file .env trên máy chủ, rồi khởi động lại project. Xem hướng dẫn trong README.</p>
+          <label>Client ID máy chủ đang dùng<input id="calendar-oauth-client-id" type="text" readonly value="Đang kiểm tra…" /></label>
+          <label>Địa chỉ callback cần đăng ký<input id="calendar-oauth-redirect" type="text" readonly value="Đang kiểm tra…" /></label>
+          <p>Nếu gặp <code>redirect_uri_mismatch</code>: mở <a href="https://console.cloud.google.com/auth/clients" target="_blank" rel="noopener noreferrer">Google Cloud → Clients</a>, chọn đúng client có ID ở trên. Trong <strong>Authorized redirect URIs</strong>, thêm nguyên văn địa chỉ callback rồi Save. Mục này khác với Authorized JavaScript origins. Không thêm dấu / ở cuối.</p>
+          <p>Sau lần cấp quyền đầu tiên, lịch tự tải khi reload hoặc mở lại app trên cùng trình duyệt.</p>
+        </details>
+        <div class="calendar-actions">
+          <button id="calendar-connect" class="primary-button" type="button">Kết nối Google Calendar</button>
+          <button id="calendar-disconnect" class="secondary-button" type="button" hidden>Ngắt kết nối</button>
+          <a href="https://calendar.google.com/" target="_blank" rel="noopener noreferrer">Mở Google Calendar ↗</a>
+        </div>
+        <p id="calendar-status" role="status">Chưa kết nối.</p>
+        <label class="calendar-auto"><input id="calendar-auto" type="checkbox" /> Gửi lên lịch mỗi khi lưu nhật ký trong lúc đã kết nối</label>
+        <p class="calendar-note">Chỉ gửi những phiên bạn chọn; nhật ký cũ cần bổ sung giờ bắt đầu. Xóa trong VibeLog không xóa sự kiện trên Google. Chỉnh sửa trên Google không tự cập nhật nhật ký.</p>
+        <div class="calendar-week" id="study-calendar">
+          <div class="calendar-week-heading">
+            <div><h3>Lịch của bạn trong tuần</h3><p id="calendar-week-range"></p></div>
+            <div class="calendar-week-controls" aria-label="Chọn tuần xem lịch">
+              <button id="calendar-week-prev" class="secondary-button" type="button">← Tuần trước</button>
+              <button id="calendar-week-today" class="secondary-button" type="button">Tuần này</button>
+              <button id="calendar-week-next" class="secondary-button" type="button">Tuần sau →</button>
+              <button id="calendar-week-refresh" class="secondary-button" type="button">Tải lại</button>
+            </div>
+          </div>
+          <p class="calendar-note">Lịch chính · Giờ theo thiết bị · Bấm ô trống để hẹn buổi học, bấm sự kiện để xem chi tiết.</p>
+          <p id="calendar-week-status" role="status"></p>
+          <div class="calendar-week-scroll" data-lenis-prevent tabindex="0" aria-label="Lưới lịch tuần, cuộn để xem các giờ"><div id="calendar-week-grid" class="calendar-week-grid" aria-label="Lịch Google Calendar trong tuần" aria-busy="false"></div></div>
+        </div>
+        <h3>Hẹn buổi học tiếp theo</h3>
+        <form id="plan-form">
+          <label>Bạn định học gì?<input name="title" type="text" maxlength="80" required placeholder="Ví dụ: Tìm hiểu API" /></label>
+          <div class="form-row">
+            <label>Bắt đầu<input name="startedAt" type="datetime-local" required /></label>
+            <label>Thời lượng (phút)<input name="minutes" type="number" min="5" max="600" value="30" required /></label>
+          </div>
+          <button class="primary-button" type="submit">Lưu lịch học</button>
+        </form>
+        <p class="calendar-note">Giờ theo thiết bị: <span id="calendar-timezone"></span>. Buổi đã gửi lên Google có lời nhắc trước 10 phút.</p>
+        <div id="planned-list" aria-live="polite"></div>
+      </section>
+
+      <dialog id="calendar-event-dialog" class="calendar-event-dialog" aria-labelledby="calendar-event-title" data-lenis-prevent>
+        <button id="calendar-event-close" class="dialog-close" type="button" aria-label="Đóng chi tiết sự kiện">×</button>
+        <p class="eyebrow">Chi tiết sự kiện</p>
+        <h2 id="calendar-event-title"></h2>
+        <p id="calendar-event-time"></p>
+        <p id="calendar-event-location"></p>
+        <p id="calendar-event-description"></p>
+      </dialog>
+
       <section class="workspace">
         <div class="form-panel" id="new-entry" data-reveal="up">
           <div class="section-heading">
@@ -172,6 +246,9 @@
           </div>
 
           <form id="entry-form">
+            <label>Bắt đầu học lúc
+              <input id="started-at" name="startedAt" type="datetime-local" required />
+            </label>
             <label>
               Hôm nay bạn làm gì?
               <input
@@ -303,7 +380,23 @@
       <p>Được làm bằng sự tò mò, vài lần sửa lỗi và một chút ✦ vibe.</p>
     </footer>
 
-    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+    <div class="toast" id="toast" hidden>
+      <div class="toast-content"><span id="toast-icon" aria-hidden="true"></span><span id="toast-message" role="status" aria-live="polite" aria-atomic="true"></span></div>
+      <button id="toast-dismiss" type="button" aria-label="Đóng thông báo"><span data-icon="close"></span></button>
+    </div>
+    <button id="back-to-top" class="back-to-top" type="button" aria-label="Về đầu trang" title="Về đầu trang"><span data-icon="arrowUp" aria-hidden="true"></span></button>
+    <dialog id="command-palette" class="command-palette" aria-labelledby="command-title" data-lenis-prevent>
+      <div class="command-heading"><h2 id="command-title">Bạn muốn làm gì?</h2><button id="command-close" class="dialog-close" type="button" aria-label="Đóng tìm nhanh"><span data-icon="close"></span></button></div>
+      <div class="command-search"><span data-icon="search"></span><input id="command-input" type="text" role="combobox" aria-label="Tìm nhật ký hoặc thao tác" aria-controls="command-results" aria-expanded="true" aria-autocomplete="list" autocomplete="off" placeholder="Tìm nhật ký, tag hoặc thao tác…" /></div>
+      <p id="command-count" role="status"></p>
+      <div id="command-results" role="listbox" aria-label="Kết quả tìm nhanh"></div>
+      <div class="command-help"><span><kbd>↑</kbd><kbd>↓</kbd> chọn</span><span><kbd>Enter</kbd> mở</span><span><kbd>Esc</kbd> đóng</span></div>
+    </dialog>
+    <dialog id="confirm-action" class="confirm-action" aria-labelledby="confirm-title" aria-describedby="confirm-message" data-lenis-prevent>
+      <h2 id="confirm-title">Xác nhận xóa</h2>
+      <p id="confirm-message"></p>
+      <form method="dialog"><button class="secondary-button" value="cancel" autofocus>Giữ lại</button><button class="danger-button" value="confirm">Xóa khỏi VibeLog</button></form>
+    </dialog>
 
     <template id="empty-state-template">
       <div class="empty-state">
@@ -313,9 +406,9 @@
       </div>
     </template>
 
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/ScrollTrigger.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/lenis@1.3.26/dist/lenis.min.js"></script>
+    <script src="src/vendor/gsap.min.js"></script>
+    <script src="src/vendor/ScrollTrigger.min.js"></script>
+    <script src="src/vendor/lenis.min.js"></script>
     <script type="module" src="src/app.js"></script>
   </body>
 </html>

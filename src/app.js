@@ -14,7 +14,15 @@ import {
   saveWeeklyGoal,
   toLocalDateKey,
 } from "./store.js";
-import { animateChartBars, initializeMotion } from "./animations.js";
+import { animateChartBars, animateContent, initializeMotion, resolveMotionPreference, scrollToTop } from "./animations.js";
+import { sessionRange, toDateTimeInput } from "./calendar.js";
+import { initializeCalendarUI } from "./calendar-ui.js";
+import { updateMetric } from "./design-effects.js";
+import { createIcon, initializeIcons } from "./icons.js";
+import { initializeNotifications, notify, confirmAction } from "./notifications.js";
+import { initializeCommandPalette } from "./command-palette.js";
+import { initializeFormValidation } from "./form-validation.js";
+import { initializeDropdowns, syncDropdowns } from "./dropdowns.js";
 
 const moodLabels = {
   flow: "✨ Vào guồng",
@@ -41,8 +49,6 @@ const cancelEditButton = document.querySelector("#cancel-edit");
 const clearFiltersButton = document.querySelector("#clear-filters");
 const goalInput = document.querySelector("#weekly-goal-input");
 const backupButton = document.querySelector("#backup-data");
-const toast = document.querySelector("#toast");
-const themeToggle = document.querySelector("#theme-toggle");
 const motionToggle = document.querySelector("#motion-toggle");
 const reminderEnabled = document.querySelector("#reminder-enabled");
 const reminderTime = document.querySelector("#reminder-time");
@@ -51,10 +57,37 @@ let entries = loadEntries();
 let weeklyGoal = loadWeeklyGoal();
 let reminder = loadReminder();
 let editingId = null;
-let toastTimer;
+initializeIcons();
+initializeNotifications();
+initializeFormValidation();
+initializeDropdowns();
+const calendarUI = initializeCalendarUI(showToast);
+initializeCommandPalette({
+  getEntries: () => entries,
+  getCommands: () => [
+    { id: 'new', title: 'Ghi nhật ký học', keywords: 'them moi phien', icon: 'plus', run: () => jumpTo('#new-entry', form.elements.title) },
+    { id: 'calendar', title: 'Xem lịch tuần', keywords: 'google calendar', icon: 'calendar', run: () => jumpTo('#study-calendar', document.querySelector('#calendar-week-today')) },
+    { id: 'plan', title: 'Hẹn buổi học tiếp theo', keywords: 'dat lich ke hoach', icon: 'calendar', run: () => jumpTo('#plan-form', document.querySelector('#plan-form').elements.title) },
+    { id: 'search', title: 'Tìm trong nhật ký', keywords: 'tim kiem loc', icon: 'search', run: () => jumpTo('.journal-panel', searchInput) },
+    { id: 'backup', title: 'Sao lưu nhật ký', keywords: 'tai json xuat du lieu', icon: 'download', disabled: entries.length === 0, run: () => backupButton.click() },
+    { id: 'motion', title: document.documentElement.dataset.motion === 'full' ? 'Giảm chuyển động' : 'Bật chuyển động', keywords: 'animation hieu ung', icon: 'waves', run: () => motionToggle.click() },
+  ],
+  showEntry(id) {
+    searchInput.value = '';
+    moodFilter.value = 'all'; topicFilter.value = 'all'; renderEntries();
+    const card = [...list.children].find(item => item.dataset.entryId === id);
+    if (card) jumpTo(card, card);
+  },
+});
+
+function jumpTo(target, focus) {
+  const element = typeof target === 'string' ? document.querySelector(target) : target;
+  element?.scrollIntoView({ behavior: document.documentElement.dataset.motion === 'full' ? 'smooth' : 'instant', block: 'start' });
+  focus?.focus({ preventScroll: true });
+}
+form.elements.startedAt.value = toDateTimeInput(new Date(Date.now() - 30 * 60000));
 
 goalInput.value = weeklyGoal;
-renderThemeToggle();
 renderMotionToggle();
 renderReminderSettings();
 
@@ -69,6 +102,11 @@ form.addEventListener("submit", (event) => {
   event.preventDefault();
   const data = new FormData(form);
   const existingEntry = entries.find((entry) => entry.id === editingId);
+  let range;
+  try {
+    range = sessionRange(data.get("startedAt"), data.get("minutes"));
+    if (new Date(range.endedAt).getTime() > Date.now()) throw new Error("Phiên đã học không thể kết thúc trong tương lai. Dùng form hẹn buổi học để đặt lịch mới.");
+  } catch (error) { showToast(error.message, { kind: 'error' }); return; }
   const updatedEntry = {
     id: editingId ?? crypto.randomUUID(),
     title: data.get("title").trim(),
@@ -78,6 +116,7 @@ form.addEventListener("submit", (event) => {
     tags: parseTags(data.get("tags")),
     learning: data.get("learning").trim(),
     createdAt: existingEntry?.createdAt ?? new Date().toISOString(),
+    ...range,
   };
 
   entries = editingId
@@ -86,9 +125,17 @@ form.addEventListener("submit", (event) => {
   saveEntries(entries);
   resetForm();
   render();
+  showToast(existingEntry ? "Đã cập nhật nhật ký." : "Đã lưu phiên học vào nhật ký.", { kind: 'success' });
+  calendarUI.syncAfterSave(updatedEntry);
 });
 
-list.addEventListener("click", (event) => {
+list.addEventListener("click", async (event) => {
+  const syncButton = event.target.closest("[data-calendar-id]");
+  if (syncButton) {
+    const entry = entries.find((item) => item.id === syncButton.dataset.calendarId);
+    if (entry) calendarUI.sync(entry, "learned", syncButton);
+    return;
+  }
   const editButton = event.target.closest("[data-edit-id]");
   if (editButton) {
     startEditing(editButton.dataset.editId);
@@ -98,12 +145,13 @@ list.addEventListener("click", (event) => {
   const deleteButton = event.target.closest("[data-delete-id]");
   if (!deleteButton) return;
   const entry = entries.find((item) => item.id === deleteButton.dataset.deleteId);
-  if (!entry || !confirm(`Xóa phiên học “${entry.title}”? Thao tác này không thể hoàn tác.`)) return;
+  if (!entry || !await confirmAction(`Xóa phiên học “${entry.title}” khỏi VibeLog? Thao tác này không thể hoàn tác. Sự kiện trên Google Calendar vẫn được giữ.`)) return;
 
   entries = entries.filter((item) => item.id !== entry.id);
   if (editingId === entry.id) resetForm();
   saveEntries(entries);
   render();
+  showToast('Đã xóa phiên học khỏi VibeLog.', { kind: 'success' });
 });
 
 searchInput.addEventListener("input", renderEntries);
@@ -122,7 +170,7 @@ goalInput.addEventListener("change", () => {
   const nextGoal = Number(goalInput.value);
   if (!Number.isFinite(nextGoal) || nextGoal < 30 || nextGoal > 10080) {
     goalInput.value = weeklyGoal;
-    showToast("Mục tiêu cần nằm trong khoảng 30–10.080 phút.");
+    showToast("Mục tiêu cần nằm trong khoảng 30–10.080 phút.", { kind: 'error' });
     return;
   }
 
@@ -145,21 +193,22 @@ backupButton.addEventListener("click", () => {
   showToast(`Đã sao lưu ${entries.length} phiên học.`);
 });
 
-themeToggle.addEventListener("click", () => {
-  const nextTheme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
-  document.documentElement.classList.add("theme-transition");
-  document.documentElement.dataset.theme = nextTheme;
-  localStorage.setItem("vibelog.theme.v1", nextTheme);
-  renderThemeToggle();
-  window.setTimeout(() => document.documentElement.classList.remove("theme-transition"), 450);
-});
+document.querySelector("#back-to-top").addEventListener("click", scrollToTop);
 
 motionToggle.addEventListener("click", () => {
   const nextMotion = document.documentElement.dataset.motion === "full" ? "reduced" : "full";
   localStorage.setItem("vibelog.motion.v1", nextMotion);
   document.documentElement.dataset.motion = nextMotion;
   renderMotionToggle();
-  window.location.reload();
+  initializeMotion();
+  showToast(nextMotion === "full" ? "Đã bật chuyển động." : "Đã giảm chuyển động.");
+});
+
+window.matchMedia("(prefers-reduced-motion: reduce)").addEventListener("change", (event) => {
+  if (localStorage.getItem("vibelog.motion.v1") !== null) return;
+  document.documentElement.dataset.motion = resolveMotionPreference(null, event.matches);
+  initializeMotion();
+  renderMotionToggle();
 });
 
 reminderEnabled.addEventListener("change", async () => {
@@ -206,9 +255,9 @@ function render() {
   renderWeeklyGoal();
   renderLearningInsights();
   const stats = calculateStats(entries);
-  document.querySelector("#total-sessions").textContent = stats.sessions;
-  document.querySelector("#total-minutes").textContent = stats.minutes;
-  document.querySelector("#current-streak").textContent = stats.streak;
+  updateMetric(document.querySelector("#total-sessions"), stats.sessions);
+  updateMetric(document.querySelector("#total-minutes"), stats.minutes);
+  updateMetric(document.querySelector("#current-streak"), stats.streak);
 }
 
 function renderLearningInsights() {
@@ -252,6 +301,9 @@ function renderLearningInsights() {
 
 function renderWeeklyGoal() {
   const progress = calculateWeeklyProgress(entries, weeklyGoal);
+  updateMetric(document.querySelector("#hero-week-minutes"), progress.minutes);
+  document.querySelector("#hero-week-percent").textContent = `${progress.percent}%`;
+  document.querySelector("#hero-focus-progress").style.width = `${progress.percent}%`;
   document.querySelector("#weekly-minutes").textContent = progress.minutes;
   document.querySelector("#weekly-goal-value").textContent = weeklyGoal;
   document.querySelector("#weekly-progress").style.width = `${progress.percent}%`;
@@ -264,6 +316,7 @@ function renderWeeklyGoal() {
 }
 
 function renderEntries() {
+  syncDropdowns();
   list.replaceChildren();
   const visibleEntries = filterEntries(entries, searchInput.value, moodFilter.value, topicFilter.value);
   const hasFilters = searchInput.value.trim() !== "" || moodFilter.value !== "all" || topicFilter.value !== "all";
@@ -283,6 +336,9 @@ function renderEntries() {
   visibleEntries.forEach((entry) => {
     const card = document.createElement("article");
     card.className = "entry-card";
+    card.dataset.spotlight = "";
+    card.dataset.entryId = entry.id;
+    card.tabIndex = -1;
 
     const meta = document.createElement("div");
     meta.className = "entry-meta";
@@ -294,18 +350,31 @@ function renderEntries() {
     );
 
     const title = createElement("h3", "", entry.title);
+    if (entry.startedAt) {
+      const timeFormat = new Intl.DateTimeFormat("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" });
+      const range = sessionRange(entry.startedAt, entry.minutes);
+      meta.append(createElement("span", "", `${timeFormat.format(new Date(range.startedAt))} → ${timeFormat.format(new Date(range.endedAt))}`));
+    }
     const learning = createElement("p", "", entry.learning);
     const tags = document.createElement("div");
     tags.className = "tag-list";
     (entry.tags ?? []).forEach((tag) => tags.append(createElement("span", "tag", `#${tag}`)));
     const actions = document.createElement("div");
     actions.className = "entry-actions";
+    const syncButton = createElement("button", "edit-button", entry.startedAt ? "Gửi / cập nhật lịch" : "Bổ sung giờ học để gửi lịch");
+    syncButton.type = "button";
+    syncButton.prepend(createIcon('calendar'));
+    if (entry.startedAt) syncButton.dataset.calendarId = entry.id;
+    else syncButton.dataset.editId = entry.id;
+    actions.append(syncButton);
     const editButton = createElement("button", "edit-button", "Sửa");
     editButton.type = "button";
+    editButton.prepend(createIcon('edit'));
     editButton.dataset.editId = entry.id;
     editButton.setAttribute("aria-label", `Sửa phiên học ${entry.title}`);
     const deleteButton = createElement("button", "delete-button", "Xóa");
     deleteButton.type = "button";
+    deleteButton.prepend(createIcon('trash'));
     deleteButton.dataset.deleteId = entry.id;
     deleteButton.setAttribute("aria-label", `Xóa phiên học ${entry.title}`);
     actions.append(editButton, deleteButton);
@@ -315,6 +384,7 @@ function renderEntries() {
     card.append(actions);
     list.append(card);
   });
+  animateContent([...list.children].slice(0, 8));
 }
 
 function startEditing(id) {
@@ -328,6 +398,8 @@ function startEditing(id) {
   form.elements.topic.value = entry.topic ?? "other";
   form.elements.tags.value = (entry.tags ?? []).join(", ");
   form.elements.learning.value = entry.learning;
+  form.elements.startedAt.value = entry.startedAt ? toDateTimeInput(entry.startedAt) : "";
+  syncDropdowns();
   document.querySelector("#form-eyebrow").textContent = "Đang chỉnh sửa";
   document.querySelector("#form-title").textContent = "Cập nhật phiên học";
   document.querySelector("#submit-label").textContent = "Lưu thay đổi";
@@ -340,6 +412,8 @@ function resetForm() {
   editingId = null;
   form.reset();
   form.elements.minutes.value = 30;
+  syncDropdowns();
+  form.elements.startedAt.value = toDateTimeInput(new Date(Date.now() - 30 * 60000));
   document.querySelector("#form-eyebrow").textContent = "Check-in";
   document.querySelector("#form-title").textContent = "Thêm một phiên học";
   document.querySelector("#submit-label").textContent = "Lưu vào nhật ký";
@@ -359,12 +433,6 @@ function formatDate(date) {
 
 function formatChartDate(date) {
   return new Intl.DateTimeFormat("vi-VN", { day: "numeric", month: "numeric" }).format(date);
-}
-
-function renderThemeToggle() {
-  const isDark = document.documentElement.dataset.theme === "dark";
-  themeToggle.setAttribute("aria-pressed", String(isDark));
-  themeToggle.setAttribute("aria-label", isDark ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối");
 }
 
 function renderMotionToggle() {
@@ -410,14 +478,7 @@ function checkReminder() {
   }
 }
 
-function showToast(message) {
-  window.clearTimeout(toastTimer);
-  toast.textContent = message;
-  toast.hidden = false;
-  toastTimer = window.setTimeout(() => {
-    toast.hidden = true;
-  }, 2600);
-}
+function showToast(message, options) { notify(message, options); }
 
 render();
 initializeMotion();
