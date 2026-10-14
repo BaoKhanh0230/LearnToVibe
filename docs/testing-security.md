@@ -4,7 +4,9 @@
 
 Đây là báo cáo về mã nguồn, không phải chứng nhận website an toàn tuyệt đối. 60 kiểm thử tự động đã đạt khi hoàn tất phần rà soát này. `npm audit --omit=dev --audit-level=high` trả về 0 lỗ hổng đã biết trong dependency production ở thời điểm chạy. Cần đọc báo cáo CI của commit tương ứng để biết kết quả trên GitHub.
 
-Database được kiểm thử bằng `pg-mem`, Google API được giả lập trong kiểm thử máy chủ. Chưa có bằng chứng từ PostgreSQL Neon thật, Render thật hoặc đăng nhập Google trên domain mới. Chỉ khi deployment có trạng thái live và các bước nghiệm thu dưới đây đạt mới gọi là đã kiểm thử bản triển khai. `/healthz` kiểm tra tiến trình HTTP đang sống; nó không chứng minh Google hoặc database đang hoạt động.
+Unit/integration dùng `pg-mem` và Google API giả lập. Ngày 14/10/2026, đã kiểm thử thêm PostgreSQL Neon thật trên nhánh `deployment-tests`: TLS kiểm tra chứng chỉ, mã hóa, phiên riêng, đọc lại qua kết nối mới, cập nhật có điều kiện và ngắt phiên đều đạt. Dữ liệu kiểm thử là dữ liệu giả, được xóa sau kiểm thử.
+
+Render `https://vibelog-baokhanh.onrender.com` đã live; smoke test HTTPS, API JSON, cookie Secure/HttpOnly, PKCE, chặn Origin lạ và chặn file bí mật đều đạt. Việc đăng nhập Google, ghi lịch thật và giữ cookie qua restart máy chủ vẫn cần nghiệm thu với tài khoản trên browser. `/healthz` kiểm tra tiến trình HTTP đang sống; nó không chứng minh toàn bộ luồng Google đang hoạt động. Xem [bản ghi deployment](deployment-status.md).
 
 ## Kiểm thử chức năng: điều gì phải hoạt động?
 
