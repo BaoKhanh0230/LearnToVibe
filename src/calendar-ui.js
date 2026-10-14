@@ -35,7 +35,6 @@ export function initializeCalendarUI(showToast) {
     query("#calendar-server-config").textContent = browser
       ? "Sau khi tải lại trang hoặc hết phiên, nhấn Kết nối để tiếp tục dùng lịch."
       : "Kết nối được ghi nhớ trên cùng trình duyệt; lịch tự tải khi mở lại app.";
-    query("#calendar-oauth-client-id").value = calendar.loginConfig?.clientId ?? "Chưa cấu hình";
     query("#calendar-oauth-address-label").textContent = browser ? "Authorized JavaScript origins" : "Authorized redirect URIs";
     query("#calendar-oauth-redirect").value = calendar.loginConfig?.javascriptOrigin ?? calendar.loginConfig?.redirectUri ?? "Chưa cấu hình";
     weekCalendar.refresh();
