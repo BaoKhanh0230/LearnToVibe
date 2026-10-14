@@ -7,13 +7,16 @@ import { request as httpRequest } from "node:http";
 import { createVibeLogServer } from "../scripts/server.mjs";
 import { SessionStore } from "../scripts/session-store.mjs";
 import { CALENDAR_SCOPE } from "../src/calendar.js";
+import { newDb } from "pg-mem";
+import { PostgresSessionStore } from "../scripts/postgres-session-store.mjs";
+import { randomBytes } from "node:crypto";
 
 const origin = "http://localhost:4173";
 const clientId = "test.apps.googleusercontent.com";
 const secret = "private-client-secret";
 const jsonResponse = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
 
-async function setup(t, { configured = true } = {}) {
+async function setup(t, { configured = true, postgres = false } = {}) {
   const root = mkdtempSync(join(tmpdir(), "vibelog-auth-"));
   const directory = join(root, ".vibelog-data");
   writeFileSync(join(root, "index.html"), "VibeLog");
@@ -43,14 +46,20 @@ async function setup(t, { configured = true } = {}) {
   };
   let server;
   let port;
+  const Pool = postgres ? newDb({ noAstCoverageCheck: true }).adapters.createPg().Pool : null;
+  const pool = Pool ? new Pool() : null;
+  const encryptionKey = randomBytes(32).toString("base64");
   const start = async () => {
-    server = createVibeLogServer({ root, origin, clientId: configured ? clientId : undefined, clientSecret: configured ? secret : undefined, dataDirectory: directory, fetcher });
+    const sessionStore = pool ? new PostgresSessionStore(pool, encryptionKey) : undefined;
+    if (sessionStore) await sessionStore.initialize();
+    server = createVibeLogServer({ root, origin, clientId: configured ? clientId : undefined, clientSecret: configured ? secret : undefined, dataDirectory: directory, fetcher, sessionStore });
     await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
     port = server.address().port;
   };
   await start();
   t.after(async () => {
     await new Promise((resolve) => server.close(resolve));
+    if (pool) await pool.end();
     rmSync(root, { recursive: true, force: true });
   });
   const request = (path, { method = "GET", cookie, csrf, body, external = false, marker = true } = {}) => new Promise((resolve, reject) => {
@@ -87,6 +96,23 @@ async function setup(t, { configured = true } = {}) {
     expireAccess: () => { const store = new SessionStore(directory); for (const [id, record] of Object.entries(store.sessions)) store.set(id, { ...record, accessExpiresAt: 0 }); },
   };
 }
+
+test("OAuth dùng PostgreSQL giữ cookie sau restart, gia hạn token và ngắt kết nối bền vững", async t => {
+  const app = await setup(t, { postgres: true });
+  const first = await app.connect();
+  const second = await app.connect();
+  await app.restart();
+  assert.equal((await app.request("/api/auth/status", { cookie: first.cookie })).data.connected, true);
+  assert.equal((await app.request("/api/auth/status", { cookie: second.cookie })).data.connected, true);
+  assert.equal((await app.request("/healthz")).status, 200);
+  app.setApi401();
+  assert.equal((await app.request("/api/calendar/events", { cookie: first.cookie })).status, 200);
+  assert.equal(app.refreshCount, 1);
+  await app.request("/api/auth/disconnect", { method: "POST", cookie: first.cookie, csrf: first.csrf });
+  await app.restart();
+  assert.equal((await app.request("/api/auth/status", { cookie: first.cookie })).data.connected, false);
+  assert.equal((await app.request("/api/auth/status", { cookie: second.cookie })).data.connected, true);
+});
 
 test("đăng nhập offline, cookie HttpOnly và không lộ token ở giao diện hoặc file lưu", async t => {
   const app = await setup(t);

@@ -41,10 +41,10 @@ export function createGoogleAuth({ origin, clientId, clientSecret, store, fetche
     response.writeHead(303, { Location: `/?google=${result}#calendar-title`, "Cache-Control": "no-store", "Referrer-Policy": "no-referrer" });
     response.end();
   };
-  const getSession = (request) => {
+  const getSession = async (request) => {
     const value = cookieValue(request, "vibelog_session");
     const id = value ? sessionKey(value) : null;
-    const record = id ? store.get(id) : null;
+    const record = id ? await store.get(id) : null;
     return { id, record: record?.clientId === clientId ? record : null };
   };
 
@@ -61,19 +61,18 @@ export function createGoogleAuth({ origin, clientId, clientSecret, store, fetche
   }
 
   async function accessToken(id, force = false) {
-    const record = store.get(id);
+    const record = await store.get(id);
     if (!record) throw Object.assign(new Error("Kết nối Google không còn hiệu lực. Hãy kết nối lại."), { status: 401 });
     if (!force && record.accessExpiresAt > now() + 60000) return record.accessToken;
     if (refreshing.has(id)) return refreshing.get(id);
     const refresh = (async () => {
       try {
         const data = await tokenRequest({ grant_type: "refresh_token", refresh_token: record.refreshToken });
-        if (store.get(id) !== record) throw Object.assign(new Error("Kết nối Google đã thay đổi."), { status: 401 });
         const next = { ...record, accessToken: data.access_token, accessExpiresAt: now() + Number(data.expires_in) * 1000, refreshToken: data.refresh_token ?? record.refreshToken };
-        store.set(id, next);
+        if (!await store.replace(id, record, next)) throw Object.assign(new Error("Kết nối Google đã thay đổi."), { status: 401 });
         return next.accessToken;
       } catch (error) {
-        if (error.invalidGrant) { if (store.get(id) === record) store.delete(id); error.status = 401; error.message = "Google yêu cầu kết nối lại. Nhật ký và kế hoạch vẫn được giữ."; }
+        if (error.invalidGrant) { await store.deleteIfCurrent(id, record); error.status = 401; error.message = "Google yêu cầu kết nối lại. Nhật ký và kế hoạch vẫn được giữ."; }
         throw error;
       }
     })();
@@ -86,7 +85,7 @@ export function createGoogleAuth({ origin, clientId, clientSecret, store, fetche
     if (!path.startsWith("/api/")) return false;
     if (request.headers.host !== new URL(origin).host) { json(response, 403, { error: "Địa chỉ website không khớp APP_URL." }); return true; }
     try {
-      const { id, record } = getSession(request);
+      const { id, record } = await getSession(request);
       if (!["GET", "HEAD"].includes(request.method)) {
         if (request.headers.origin !== origin || request.headers["x-vibelog-request"] !== "1") {
           json(response, 403, { error: "Yêu cầu không đến từ VibeLog." }); return true;
@@ -132,8 +131,8 @@ export function createGoogleAuth({ origin, clientId, clientSecret, store, fetche
           if (!data.refresh_token || !data.scope?.split(" ").includes(CALENDAR_SCOPE)) { redirect(response, "missing-permission"); return true; }
           const sessionCookie = random();
           const newId = sessionKey(sessionCookie);
-          store.set(newId, { clientId, csrfToken: random(), refreshToken: data.refresh_token, accessToken: data.access_token, accessExpiresAt: now() + Number(data.expires_in) * 1000, expiresAt: now() + SESSION_SECONDS * 1000 });
-          if (flow.oldId) store.delete(flow.oldId);
+          await store.set(newId, { clientId, csrfToken: random(), refreshToken: data.refresh_token, accessToken: data.access_token, accessExpiresAt: now() + Number(data.expires_in) * 1000, expiresAt: now() + SESSION_SECONDS * 1000 });
+          if (flow.oldId) await store.delete(flow.oldId);
           response.setHeader("Set-Cookie", [cookie("vibelog_oauth", "", 0, "/api/auth"), cookie("vibelog_session", sessionCookie, SESSION_SECONDS)]);
           redirect(response, "connected");
         } catch { redirect(response, "failed"); }
@@ -142,7 +141,7 @@ export function createGoogleAuth({ origin, clientId, clientSecret, store, fetche
       if (!record) { json(response, 401, { error: "Hãy kết nối Google Calendar để xem hoặc gửi lịch." }); return true; }
       if (request.method !== "GET" && !equal(request.headers["x-vibelog-csrf"], record.csrfToken)) { json(response, 403, { error: "Phiên thao tác đã thay đổi. Hãy tải lại trang." }); return true; }
       if (path === "/api/auth/disconnect" && request.method === "POST") {
-        store.delete(id);
+        await store.delete(id);
         response.setHeader("Set-Cookie", cookie("vibelog_session", "", 0));
         let revoked = false;
         try {
@@ -171,9 +170,9 @@ export function createGoogleAuth({ origin, clientId, clientSecret, store, fetche
       const call = async (force) => fetcher(target.href, { method: request.method, headers: { Authorization: `Bearer ${await accessToken(id, force)}`, "Content-Type": "application/json" }, ...(body ? { body: JSON.stringify(body) } : {}), signal: AbortSignal.timeout(15000) });
       let result = await call(false);
       if (result.status === 401) result = await call(true);
-      if (!store.get(id)) { json(response, 401, { error: "Kết nối Google đã bị ngắt." }); return true; }
+      if (!await store.get(id)) { json(response, 401, { error: "Kết nối Google đã bị ngắt." }); return true; }
       if (!result.ok) {
-        if (result.status === 401) store.delete(id);
+        if (result.status === 401) await store.delete(id);
         const messages = { 401: "Google yêu cầu kết nối lại.", 403: "Google từ chối quyền lịch. Kiểm tra Calendar API và quyền truy cập.", 404: "Chưa có sự kiện này.", 409: "Sự kiện đã tồn tại.", 410: "Sự kiện đã bị xóa trên Google.", 429: "Google đang giới hạn yêu cầu. Thử lại sau." };
         json(response, result.status, { error: messages[result.status] ?? "Google chưa xử lý được yêu cầu. Thử lại sau." });
       } else json(response, 200, await result.json());

@@ -31,6 +31,16 @@ export class SessionStore {
 
   set(id, value) { this.sessions[id] = value; this.save(); }
   delete(id) { delete this.sessions[id]; this.save(); }
+  replace(id, previous, next) {
+    if (this.get(id) !== previous) return false;
+    this.set(id, next);
+    return true;
+  }
+  deleteIfCurrent(id, previous) {
+    if (this.get(id) !== previous) return false;
+    this.delete(id);
+    return true;
+  }
 
   save() {
     for (const [id, record] of Object.entries(this.sessions)) if (record.expiresAt <= this.now()) delete this.sessions[id];

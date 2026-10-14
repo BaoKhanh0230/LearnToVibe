@@ -40,6 +40,12 @@ Workflow tại `.github/workflows/ci-cd.yml` tự động chạy khi push hoặc
 
 ## Kết nối Google Calendar
 
+### Máy chủ miễn phí và kết nối lâu dài trên mạng
+
+Đã có cấu hình **Render Free + Neon PostgreSQL Free** trong `render.yaml`. Khi dùng database, dữ liệu phiên Google được mã hóa và lưu bên ngoài máy chủ, nên không mất sau khi Render ngủ, restart hoặc deploy lại. Production yêu cầu `DATABASE_URL` và `SESSION_ENCRYPTION_KEY`; không dùng ổ đĩa tạm để ghi nhớ phiên. Xem [hướng dẫn chi phí, tạo dịch vụ, biến môi trường và kiểm tra deployment](docs/free-hosting.md). Việc thêm cấu hình vào Git chưa tạo tài khoản hay dịch vụ hosting.
+
+Ở local, `npm start` vẫn dùng kho file như trước nếu không đặt `DATABASE_URL`.
+
 ### Đăng nhập trên GitHub Pages (bản công khai)
 
 GitHub Pages chỉ phục vụ HTML/CSS/JavaScript; nó không chạy `scripts/server.mjs` hay đọc `.env`. Trước đây, gọi `/api/auth/connect` trên Pages nhận HTML lỗi thay vì JSON, gây `Unexpected token '<'`. Bản Pages hiện dùng **Google Identity Services token model**: mỗi người chọn tài khoản, cấp quyền và đọc/ghi lịch chính của chính mình trực tiếp qua Google API. Bản Node.js giữ luồng cookie và refresh token như trước.

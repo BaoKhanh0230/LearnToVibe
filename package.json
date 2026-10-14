@@ -8,6 +8,11 @@
     "build:pages": "node --env-file-if-exists=.env scripts/build-pages.mjs",
     "start": "node --env-file-if-exists=.env scripts/server.mjs",
     "test": "node --test"
+  },
+  "dependencies": {
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "pg-mem": "^3.0.14"
   }
 }
-

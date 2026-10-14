@@ -4,6 +4,7 @@ import { extname, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 import { SessionStore } from "./session-store.mjs";
 import { createGoogleAuth, json } from "./google-auth.mjs";
+import { connectPostgresStore } from "./postgres-session-store.mjs";
 
 const contentTypes = {
   ".css": "text/css; charset=utf-8", ".html": "text/html; charset=utf-8",
@@ -15,12 +16,13 @@ export function createVibeLogServer({
   root = process.cwd(), origin = process.env.APP_URL || "http://localhost:4173",
   clientId = process.env.GOOGLE_CLIENT_ID, clientSecret = process.env.GOOGLE_CLIENT_SECRET,
   dataDirectory = resolve(root, ".vibelog-data"), fetcher = globalThis.fetch,
+  sessionStore,
 } = {}) {
   origin = new URL(origin).origin;
   const appUrl = new URL(origin);
   if (appUrl.protocol !== "https:" && !(appUrl.protocol === "http:" && ["localhost", "127.0.0.1", "[::1]"].includes(appUrl.hostname))) throw new Error("APP_URL phải dùng HTTPS, hoặc HTTP trên localhost.");
   const absoluteRoot = realpathSync(root);
-  const store = new SessionStore(dataDirectory);
+  const store = sessionStore ?? new SessionStore(dataDirectory);
   const auth = createGoogleAuth({ origin, clientId, clientSecret, store, fetcher });
   return createServer(async (request, response) => {
     response.setHeader("X-Content-Type-Options", "nosniff");
@@ -28,6 +30,9 @@ export function createVibeLogServer({
     response.setHeader("X-Frame-Options", "DENY");
     try {
       const url = new URL(request.url, origin);
+      if (url.pathname === "/healthz" && request.method === "GET") {
+        json(response, 200, { status: "ok" }); return;
+      }
       if (await auth.handle(request, response, url)) return;
       if (!["GET", "HEAD"].includes(request.method)) { json(response, 405, { error: "Phương thức không được hỗ trợ." }); return; }
       const path = decodeURIComponent(url.pathname);
@@ -48,8 +53,12 @@ export function createVibeLogServer({
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   const port = Number(process.env.PORT) || 4173;
-  const origin = process.env.APP_URL || `http://localhost:${port}`;
-  createVibeLogServer({ origin }).listen(port, process.env.LISTEN_HOST || "127.0.0.1", () => {
+  const origin = process.env.APP_URL || process.env.RENDER_EXTERNAL_URL || `http://localhost:${port}`;
+  if (process.env.NODE_ENV === "production" && !process.env.DATABASE_URL) throw new Error("Production cần DATABASE_URL để giữ phiên sau restart/deploy.");
+  const sessionStore = process.env.DATABASE_URL ? await connectPostgresStore({
+    databaseUrl: process.env.DATABASE_URL, encryptionKey: process.env.SESSION_ENCRYPTION_KEY,
+  }) : undefined;
+  createVibeLogServer({ origin, sessionStore }).listen(port, process.env.LISTEN_HOST || (process.env.NODE_ENV === "production" ? "0.0.0.0" : "127.0.0.1"), () => {
     console.log(`VibeLog đang chạy tại ${origin}`);
     if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) console.log("Google Calendar: điền cấu hình trong .env để bật kết nối lâu dài.");
   });

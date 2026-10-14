@@ -1,0 +1,24 @@
+# Free web service only. PostgreSQL is supplied separately by a Neon Free project.
+services:
+  - type: web
+    name: vibelog
+    runtime: node
+    plan: free
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_VERSION
+        value: 24.14.1
+      - key: NODE_ENV
+        value: production
+      - key: LISTEN_HOST
+        value: 0.0.0.0
+      - key: SESSION_ENCRYPTION_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false

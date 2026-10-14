@@ -26,6 +26,12 @@ jobs:
       - name: Check JavaScript syntax
         run: node --check src/app.js && node --check src/store.js && node --check src/calendar.js && node --check src/calendar-session.js && node --check src/calendar-ui.js && node --check src/calendar-week.js && node --check src/animations.js && node --check src/design-effects.js && node --check src/icons.js && node --check src/notifications.js && node --check src/form-validation.js && node --check src/dropdowns.js && node --check src/command-palette.js && node --check scripts/server.mjs && node --check scripts/google-auth.mjs && node --check scripts/session-store.mjs
 
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check PostgreSQL integration syntax
+        run: node --check scripts/postgres-session-store.mjs
+
       - name: Run automated tests
         run: npm test
 
