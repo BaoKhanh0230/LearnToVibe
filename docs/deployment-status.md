@@ -10,6 +10,7 @@
 - Test branch: `deployment-tests`, `br-billowing-wind-azpuocov`. Giữ nhánh để kiểm thử lần sau; không chứa token Google thật hoặc dữ liệu người dùng. Các phiên giả do bài kiểm thử tạo được xóa sau khi chạy. Compute test `ep-delicate-waterfall-azaqv3xn` đã được tắt sau kiểm thử để tránh tiêu thụ hạn mức khi không dùng; bật lại trước khi chạy bài test database.
 - Commit ứng dụng ban đầu được deploy: `dac7e3b764c8a621c07ca4cb37b391d8e101c876`, đã đạt CI.
 - Initial deploy `dep-db7es0rbc2fs73eursqg` có trạng thái `live`.
+- Redeploy `dep-db7evqtg1s2s73a9jlb0` chạy commit `6db735aac9c47c2c19f3311c0b78be1d3ac65c70` sau khi CI đạt, có trạng thái `live`. Sau redeploy, smoke test vẫn đạt và số phiên database giữ nguyên (1 phiên mã hóa). Chủ tài khoản xác nhận browser vẫn tự tải lịch mà không phải kết nối lại.
 
 ## Cấu hình
 
@@ -33,7 +34,7 @@ Callback đã được chủ tài khoản xác nhận thêm vào Authorized redi
 
 `https://vibelog-baokhanh.onrender.com/api/auth/callback`
 
-Chủ tài khoản đã xác nhận đăng nhập và refresh trang đều thành công trên URL Render. Tạo/cập nhật một buổi học thử và ngắt kết nối trên browser chưa được xác nhận trong lượt triển khai này. Không coi một health check 200 là bằng chứng cho các bước này. Khi Google Auth còn Testing, hạn refresh token Calendar vẫn áp dụng; xem hướng dẫn [free-hosting.md](free-hosting.md).
+Chủ tài khoản đã xác nhận đăng nhập, refresh trang và giữ kết nối sau redeploy đều thành công trên URL Render. Tạo/cập nhật một buổi học thử và ngắt kết nối trên browser chưa được xác nhận trong lượt triển khai này. Không coi một health check 200 là bằng chứng cho các bước này. Khi Google Auth còn Testing, hạn refresh token Calendar vẫn áp dụng; xem hướng dẫn [free-hosting.md](free-hosting.md).
 
 ## Chạy lại kiểm thử
 

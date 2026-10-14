@@ -6,7 +6,7 @@
 
 Unit/integration dùng `pg-mem` và Google API giả lập. Ngày 14/10/2026, đã kiểm thử thêm PostgreSQL Neon thật trên nhánh `deployment-tests`: TLS kiểm tra chứng chỉ, mã hóa, phiên riêng, đọc lại qua kết nối mới, cập nhật có điều kiện và ngắt phiên đều đạt. Dữ liệu kiểm thử là dữ liệu giả, được xóa sau kiểm thử.
 
-Render `https://vibelog-baokhanh.onrender.com` đã live; smoke test HTTPS, API JSON, cookie Secure/HttpOnly, PKCE, chặn Origin lạ và chặn file bí mật đều đạt. Việc đăng nhập Google, ghi lịch thật và giữ cookie qua restart máy chủ vẫn cần nghiệm thu với tài khoản trên browser. `/healthz` kiểm tra tiến trình HTTP đang sống; nó không chứng minh toàn bộ luồng Google đang hoạt động. Xem [bản ghi deployment](deployment-status.md).
+Render `https://vibelog-baokhanh.onrender.com` đã live; smoke test HTTPS, API JSON, cookie Secure/HttpOnly, PKCE, chặn Origin lạ và chặn file bí mật đều đạt. Chủ tài khoản đã xác nhận đăng nhập Google, refresh và giữ kết nối sau redeploy đều thành công trên browser. Ghi/cập nhật lịch thật và ngắt kết nối trên browser chưa được xác nhận trong lượt này; các luồng đó đã có kiểm thử tự động với Google giả lập. `/healthz` kiểm tra tiến trình HTTP đang sống; nó không chứng minh toàn bộ luồng Google đang hoạt động. Xem [bản ghi deployment](deployment-status.md).
 
 ## Kiểm thử chức năng: điều gì phải hoạt động?
 
