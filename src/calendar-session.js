@@ -1,5 +1,14 @@
 import { GoogleCalendar } from "./calendar.js";
 
+async function apiData(response) {
+  if (!response.headers.get("content-type")?.includes("application/json")) {
+    throw Object.assign(new Error("Website chưa có API đăng nhập Google. Cần cấu hình bản Pages hoặc chạy máy chủ bằng npm start."), {
+      missingApi: [200, 404, 405].includes(response.status),
+    });
+  }
+  return response.json();
+}
+
 export class PersistentGoogleCalendar extends GoogleCalendar {
   constructor(options = {}) {
     super(options);
@@ -12,8 +21,8 @@ export class PersistentGoogleCalendar extends GoogleCalendar {
 
   async restore() {
     const response = await this.fetcher("/api/auth/status", { credentials: "same-origin", cache: "no-store" });
-    if (!response.ok || !response.headers.get("content-type")?.includes("application/json")) throw new Error("Kết nối lâu dài cần chạy project bằng npm start với máy chủ mới.");
-    const data = await response.json();
+    const data = await apiData(response);
+    if (!response.ok) throw Object.assign(new Error(data.error || "Chưa kiểm tra được kết nối Google. Thử tải lại trang."), { missingApi: response.status === 404 });
     this.configured = data.configured === true;
     this.loginConfig = data.loginConfig ?? null;
     this.authenticated = data.connected === true;
@@ -26,7 +35,7 @@ export class PersistentGoogleCalendar extends GoogleCalendar {
 
   async connect() {
     const response = await this.fetcher("/api/auth/connect", { method: "POST", credentials: "same-origin", headers: { "X-VibeLog-Request": "1" } });
-    const data = await response.json();
+    const data = await apiData(response);
     if (!response.ok) throw new Error(data.error || "Chưa bắt đầu được kết nối Google.");
     const target = new URL(data.url);
     if (target.origin !== "https://accounts.google.com") throw new Error("Địa chỉ đăng nhập Google không hợp lệ.");
@@ -38,7 +47,7 @@ export class PersistentGoogleCalendar extends GoogleCalendar {
       method: "POST", credentials: "same-origin",
       headers: { "X-VibeLog-Request": "1", "X-VibeLog-CSRF": this.csrfToken ?? "" },
     });
-    const data = await response.json();
+    const data = await apiData(response);
     if (!response.ok && response.status !== 401) throw new Error(data.error || "Chưa ngắt được kết nối. Thử lại.");
     this.authenticated = false;
     this.csrfToken = null;
@@ -58,7 +67,7 @@ export class PersistentGoogleCalendar extends GoogleCalendar {
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     });
     if (this.token !== marker) throw new Error("Tài khoản Google đã thay đổi. Hãy tải lại lịch.");
-    const data = await response.json();
+    const data = await apiData(response);
     if (!response.ok) {
       if (response.status === 401) { this.authenticated = false; this.token = null; this.csrfToken = null; this.onChange(); }
       throw Object.assign(new Error(data.error || "Chưa xử lý được yêu cầu lịch. Thử lại sau."), { status: response.status });

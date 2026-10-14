@@ -40,9 +40,25 @@ Workflow tại `.github/workflows/ci-cd.yml` tự động chạy khi push hoặc
 
 ## Kết nối Google Calendar
 
+### Đăng nhập trên GitHub Pages (bản công khai)
+
+GitHub Pages chỉ phục vụ HTML/CSS/JavaScript; nó không chạy `scripts/server.mjs` hay đọc `.env`. Trước đây, gọi `/api/auth/connect` trên Pages nhận HTML lỗi thay vì JSON, gây `Unexpected token '<'`. Bản Pages hiện dùng **Google Identity Services token model**: mỗi người chọn tài khoản, cấp quyền và đọc/ghi lịch chính của chính mình trực tiếp qua Google API. Bản Node.js giữ luồng cookie và refresh token như trước.
+
+Thiết lập cho chủ website một lần:
+
+1. Trong [Google Auth Platform → Clients](https://console.cloud.google.com/auth/clients), chọn OAuth client **Web application** có Client ID khớp trong app. Trong **Authorized JavaScript origins**, thêm origin website, ví dụ `https://baokhanh0230.github.io` nếu dùng Pages mặc định của repository này. Không thêm `/LearnToVibe`, đường dẫn khác hoặc dấu `/` cuối. Nếu dùng domain riêng, thêm origin HTTPS đó. Bản Pages dùng popup nên không cần callback `/api/auth/callback`; giữ callback localhost cho bản Node.
+2. Bật **Google Calendar API**, khai báo scope `https://www.googleapis.com/auth/calendar.events.owned` trong Data Access. Trong Audience chọn **External** nếu muốn người ngoài tổ chức dùng. Khi còn **Testing**, chỉ tài khoản trong **Test users** được cấp quyền. Muốn công khai, chuyển **In production** và hoàn tất các yêu cầu xét duyệt OAuth của Google đối với quyền nhạy cảm (có thể gồm thông tin ứng dụng, chính sách quyền riêng tư, xác minh domain). Mã nguồn không thể bỏ qua hạn chế này.
+3. Client ID công khai đã được lấy từ cấu hình local vào `src/google-config.js`; **Client Secret không được sao chép**. Có thể dùng repository variable `GOOGLE_CLIENT_ID` trong `Settings → Secrets and variables → Actions → Variables` để ghi đè khi deploy. Người dùng website không phải nhập cấu hình.
+4. Push bản sửa lên `main`, với `ENABLE_PAGES=true` và Pages source là GitHub Actions. Workflow kiểm thử rồi đóng gói bằng `scripts/build-pages.mjs`, ghi `mode: "browser"` vào artifact. Không đóng gói `.env`, máy chủ hay dữ liệu phiên. Chạy `npm run build:pages` để tạo artifact `_site` ở máy; build báo lỗi nếu thiếu Client ID hợp lệ.
+5. Mở website đã deploy bằng tài khoản của bạn, sau đó bằng một tài khoản Google khác được phép truy cập. Nhấn **Kết nối Google Calendar**, cho phép quyền lịch; kiểm tra tải tuần, tạo buổi học, gửi lại để cập nhật cùng sự kiện, đổi tài khoản và ngắt kết nối.
+
+Access token bản Pages chỉ nằm trong bộ nhớ tab, không lưu vào localStorage hoặc artifact. Tải lại trang hoặc hết phiên thì cần nhấn **Kết nối** lại; phải cho phép popup. Sau khi hết phiên, app dọn lịch đang hiển thị. Muốn tự kết nối khi mở lại trang, cần deploy máy chủ Node.js với ổ đĩa bền vững như phần dưới. Nhật ký/kế hoạch vẫn lưu theo trình duyệt, không đồng bộ giữa thiết bị hay tách theo tài khoản Google; đổi tài khoản sẽ gửi phiên bạn chọn sang lịch tài khoản mới.
+
+Tài liệu: [Google token model](https://developers.google.com/identity/oauth2/web/guides/use-token-model), [Client ID và Authorized JavaScript origins](https://developers.google.com/identity/oauth2/web/guides/get-google-api-clientid).
+
 VibeLog hỗ trợ ghi giờ bắt đầu thực tế và thời lượng của phiên học; giờ kết thúc được tính từ hai thông tin này. Các thống kê dùng ngày bắt đầu học, kể cả khi ghi nhật ký muộn. Nhật ký cũ vẫn được giữ, nhưng cần sửa và bổ sung giờ bắt đầu trước khi gửi lên Google. Không suy đoán giờ học từ giờ tạo nhật ký.
 
-### Thiết lập kết nối lâu dài (làm một lần)
+### Thiết lập kết nối lâu dài trên máy chủ Node.js (làm một lần)
 
 1. Tạo/chọn project trong [Google Cloud Console](https://console.cloud.google.com/) và bật **Google Calendar API**.
 2. Trong **Google Auth Platform**, cấu hình Branding, Audience và Data Access. Nếu ứng dụng ở chế độ Testing, thêm tài khoản Google của bạn vào Test users. Thêm scope `https://www.googleapis.com/auth/calendar.events.owned`.
@@ -65,13 +81,13 @@ Nếu Google báo **400: redirect_uri_mismatch**, mở **Google Calendar → Thi
 
 Google giới hạn refresh token của ứng dụng **External / Testing** có quyền Calendar khoảng **7 ngày**. Muốn tránh phải cấp quyền mỗi tuần, xem **Google Auth Platform → Audience → Publish app / In production**; làm theo yêu cầu xét duyệt Google nếu cần. Không có bảo đảm kết nối vĩnh viễn. [Tài liệu thời hạn Google OAuth](https://developers.google.com/identity/protocols/oauth2#expiration).
 
-### Dữ liệu kết nối và triển khai
+### Dữ liệu kết nối và triển khai máy chủ Node.js
 
 Google access token và refresh token chỉ được sử dụng ở máy chủ. Dữ liệu phiên lưu bằng AES-256-GCM trong `.vibelog-data/sessions.enc`, khóa ở `.vibelog-data/encryption.key`. Thư mục này tự tạo, phải được giữ khi khởi động lại và chỉ dùng cho **một tiến trình máy chủ**. Không xóa hoặc chia sẻ `.env` và `.vibelog-data`; cả hai đã được loại khỏi Git. Máy chủ chỉ phục vụ tài nguyên app, không cho tải cấu hình, file phiên hay source máy chủ qua web. Mã hóa trên đĩa không thay thế quyền truy cập tài khoản/máy tính: người có cả khóa và dữ liệu vẫn có thể giải mã.
 
 Trình duyệt chỉ giữ cookie HttpOnly/SameSite; không lưu token Google trong localStorage. Nút **Ngắt kết nối** xóa phiên trên máy chủ và thu hồi quyền Google. Nếu Google đang mất mạng, app vẫn ngắt phiên tại máy; giao diện báo cách thu hồi quyền ở Google. Đổi tài khoản sẽ thay phiên sau khi tài khoản mới cấp quyền thành công; hủy đăng nhập vẫn giữ phiên cũ.
 
-Tính năng lâu dài cần máy chủ Node.js và ổ đĩa lưu bền vững, **không chạy bằng GitHub Pages tĩnh**. Workflow Pages vẫn xuất bản giao diện, nhưng phần kết nối Google sẽ báo cần máy chủ. Khi đưa máy chủ lên mạng: dùng HTTPS, đặt `APP_URL` đúng origin (không kèm đường dẫn), thêm `${APP_URL}/api/auth/callback` vào Google Cloud, cấu hình `LISTEN_HOST` nếu nền tảng yêu cầu và giữ `.env`/dữ liệu bên ngoài thư mục public. Cookie tự dùng Secure khi `APP_URL` là HTTPS. Bản hiện tại lưu phiên trên đĩa cho một máy chủ; triển khai nhiều máy cần kho phiên dùng chung.
+Ghi nhớ kết nối lâu dài cần máy chủ Node.js và ổ đĩa lưu bền vững. GitHub Pages dùng luồng popup đã mô tả ở trên và cần kết nối lại khi mở lại trang. Khi đưa máy chủ Node.js lên mạng: dùng HTTPS, đặt `APP_URL` đúng origin (không kèm đường dẫn), thêm `${APP_URL}/api/auth/callback` vào Google Cloud, cấu hình `LISTEN_HOST` nếu nền tảng yêu cầu và giữ `.env`/dữ liệu bên ngoài thư mục public. Cookie tự dùng Secure khi `APP_URL` là HTTPS. Bản máy chủ lưu phiên trên đĩa cho một máy chủ; triển khai nhiều máy cần kho phiên dùng chung.
 
 Trong nhật ký, chọn **Gửi / cập nhật lịch** để tạo hoặc cập nhật sự kiện trên lịch chính của tài khoản đang kết nối. Có thể bật gửi mỗi lần lưu nhật ký. Gửi lại cùng phiên sẽ cập nhật cùng sự kiện, tránh tạo bản trùng. Form **Hẹn buổi học tiếp theo** lưu kế hoạch trên thiết bị và gửi ngay nếu đã kết nối, kèm lời nhắc trước 10 phút. Khi chưa kết nối hoặc gặp lỗi mạng, dữ liệu vẫn được giữ để gửi lại bằng nút trên từng phiên/kế hoạch.
 

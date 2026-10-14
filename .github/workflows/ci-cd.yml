@@ -29,6 +29,9 @@ jobs:
       - name: Run automated tests
         run: npm test
 
+      - name: Check Pages integration syntax
+        run: node --check src/google-config.js && node --check src/calendar-deployment.js && node --check scripts/build-pages.mjs
+
   deploy:
     name: Deploy to GitHub Pages
     if: github.event_name != 'pull_request' && vars.ENABLE_PAGES == 'true'
@@ -52,13 +55,9 @@ jobs:
         uses: actions/configure-pages@v5
 
       - name: Prepare static website
-        shell: bash
-        run: |
-          mkdir -p _site/src _site/image
-          cp index.html styles.css _site/
-          cp -R src/. _site/src/
-          cp -R image/. _site/image/
-          touch _site/.nojekyll
+        env:
+          GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
+        run: node scripts/build-pages.mjs
 
       - name: Upload website artifact
         uses: actions/upload-pages-artifact@v4

@@ -69,16 +69,13 @@ export class GoogleCalendar {
   get connected() { return Boolean(this.token) && Date.now() < this.expiresAt; }
 
   connect(clientId) {
-    this.token = null;
-    this.expiresAt = 0;
-    this.onChange();
     return new Promise((resolve, reject) => {
       const client = google.accounts.oauth2.initTokenClient({
         client_id: clientId,
         scope: CALENDAR_SCOPE,
         include_granted_scopes: false,
         callback: (response) => {
-          if (response.error || !response.access_token || !google.accounts.oauth2.hasGrantedAllScopes(response, CALENDAR_SCOPE)) {
+          if (response.error || !response.access_token || !Number.isFinite(Number(response.expires_in)) || Number(response.expires_in) <= 30 || !google.accounts.oauth2.hasGrantedAllScopes(response, CALENDAR_SCOPE)) {
             reject(new Error("Google chưa cấp quyền truy cập lịch. Hãy kết nối lại và cho phép quyền lịch."));
             return;
           }

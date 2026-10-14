@@ -1,5 +1,5 @@
 import { sessionRange } from "./calendar.js";
-import { PersistentGoogleCalendar } from "./calendar-session.js";
+import { DeploymentGoogleCalendar } from "./calendar-deployment.js";
 import { initializeWeekCalendar } from "./calendar-week.js";
 import { confirmAction } from "./notifications.js";
 
@@ -19,19 +19,25 @@ export function initializeCalendarUI(showToast) {
     if (!plan || typeof plan.id !== "string" || typeof plan.title !== "string") return false;
     try { sessionRange(plan.startedAt, plan.minutes); return true; } catch { return false; }
   });
-  const calendar = new PersistentGoogleCalendar({ onChange: renderConnection });
+  const calendar = new DeploymentGoogleCalendar({ onChange: renderConnection });
   const weekCalendar = initializeWeekCalendar(calendar);
   auto.checked = localStorage.getItem("vibelog.calendarAuto.v1") === "true";
   query("#calendar-timezone").textContent = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const pending = new Set();
 
   function renderConnection() {
+    const browser = calendar.mode === "browser";
     disconnect.hidden = !calendar.connected;
     connect.textContent = calendar.connected ? "Đổi tài khoản Google" : "Kết nối Google Calendar";
-    status.textContent = calendar.connected ? "Đã kết nối lâu dài. Lịch tự tải khi mở lại app." : calendar.configured ? "Chưa kết nối. Chỉ cần cấp quyền Google lần đầu." : "Cần thiết lập Google trong file .env rồi khởi động lại project.";
-    query("#calendar-server-config").textContent = calendar.configured ? "Máy chủ đã có cấu hình Google." : "Máy chủ chưa có cấu hình Google. Xem hướng dẫn trong README.";
+    status.textContent = calendar.connected
+      ? browser ? "Đã kết nối với lịch của tài khoản bạn chọn." : "Đã kết nối lâu dài. Lịch tự tải khi mở lại app."
+      : calendar.configured ? "Nhấn Kết nối Google Calendar để xem và đặt lịch của bạn." : "Website chưa được cấu hình kết nối Google. Vui lòng liên hệ chủ website.";
+    query("#calendar-server-config").textContent = browser
+      ? "Sau khi tải lại trang hoặc hết phiên, nhấn Kết nối để tiếp tục dùng lịch."
+      : "Kết nối được ghi nhớ trên cùng trình duyệt; lịch tự tải khi mở lại app.";
     query("#calendar-oauth-client-id").value = calendar.loginConfig?.clientId ?? "Chưa cấu hình";
-    query("#calendar-oauth-redirect").value = calendar.loginConfig?.redirectUri ?? "Chưa cấu hình";
+    query("#calendar-oauth-address-label").textContent = browser ? "Authorized JavaScript origins" : "Authorized redirect URIs";
+    query("#calendar-oauth-redirect").value = calendar.loginConfig?.javascriptOrigin ?? calendar.loginConfig?.redirectUri ?? "Chưa cấu hình";
     weekCalendar.refresh();
   }
 
@@ -50,7 +56,7 @@ export function initializeCalendarUI(showToast) {
   }).catch((error) => {
     status.textContent = error.message;
     query("#calendar-server-config").textContent = error.message;
-  }).finally(() => { connect.disabled = false; });
+  }).finally(() => { connect.disabled = !calendar.configured; });
   connect.addEventListener("click", async () => {
     connect.disabled = true;
     try { await calendar.connect(); }

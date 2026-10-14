@@ -3,6 +3,7 @@ node_modules/
 Thumbs.db
 .vscode/
 coverage/
+_site/
 .env
 .env.*
 !.env.example
