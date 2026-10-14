@@ -16,7 +16,8 @@ const clientId = "test.apps.googleusercontent.com";
 const secret = "private-client-secret";
 const jsonResponse = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
 
-async function setup(t, { configured = true, postgres = false } = {}) {
+async function setup(t, { configured = true, postgres = false, secure = false } = {}) {
+  const appOrigin = secure ? "https://vibelog.example" : origin;
   const root = mkdtempSync(join(tmpdir(), "vibelog-auth-"));
   const directory = join(root, ".vibelog-data");
   writeFileSync(join(root, "index.html"), "VibeLog");
@@ -52,7 +53,7 @@ async function setup(t, { configured = true, postgres = false } = {}) {
   const start = async () => {
     const sessionStore = pool ? new PostgresSessionStore(pool, encryptionKey) : undefined;
     if (sessionStore) await sessionStore.initialize();
-    server = createVibeLogServer({ root, origin, clientId: configured ? clientId : undefined, clientSecret: configured ? secret : undefined, dataDirectory: directory, fetcher, sessionStore });
+    server = createVibeLogServer({ root, origin: appOrigin, clientId: configured ? clientId : undefined, clientSecret: configured ? secret : undefined, dataDirectory: directory, fetcher, sessionStore });
     await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
     port = server.address().port;
   };
@@ -62,9 +63,9 @@ async function setup(t, { configured = true, postgres = false } = {}) {
     if (pool) await pool.end();
     rmSync(root, { recursive: true, force: true });
   });
-  const request = (path, { method = "GET", cookie, csrf, body, external = false, marker = true } = {}) => new Promise((resolve, reject) => {
-    const headers = { Host: "localhost:4173", ...(cookie ? { Cookie: cookie } : {}) };
-    if (method !== "GET") { headers.Origin = external ? "https://other.example" : origin; if (marker) headers["X-VibeLog-Request"] = "1"; }
+  const request = (path, { method = "GET", cookie, csrf, body, rawBody, external = false, marker = true, host = new URL(appOrigin).host } = {}) => new Promise((resolve, reject) => {
+    const headers = { Host: host, ...(cookie ? { Cookie: cookie } : {}) };
+    if (method !== "GET") { headers.Origin = external ? "https://other.example" : appOrigin; if (marker) headers["X-VibeLog-Request"] = "1"; }
     if (csrf) headers["X-VibeLog-CSRF"] = csrf;
     if (body) headers["Content-Type"] = "application/json";
     const req = httpRequest({ hostname: "127.0.0.1", port, path, method, headers }, (res) => {
@@ -73,7 +74,7 @@ async function setup(t, { configured = true, postgres = false } = {}) {
       res.on("end", () => { let data; try { data = JSON.parse(text); } catch {} resolve({ status: res.statusCode, headers: res.headers, text, data }); });
     });
     req.on("error", reject);
-    req.end(body ? JSON.stringify(body) : undefined);
+    req.end(rawBody ?? (body ? JSON.stringify(body) : undefined));
   });
   const connect = async () => {
     const response = await request("/api/auth/connect", { method: "POST" });
@@ -221,4 +222,33 @@ test("chưa cấu hình vẫn mở app và báo cách thiết lập", async t =>
   assert.deepEqual((await app.request("/api/auth/status")).data, { configured: false, connected: false });
   assert.equal((await app.request("/api/auth/connect", { method: "POST" })).status, 503);
   assert.equal((await app.request("/")).status, 200);
+});
+
+test("production gửi Secure/HttpOnly/SameSite, HSTS, không cache API hoặc lộ token", async t => {
+  const app = await setup(t, { secure: true });
+  const session = await app.connect();
+  assert.match(session.sessionHeader, /HttpOnly/);
+  assert.match(session.sessionHeader, /SameSite=Lax/);
+  assert.match(session.sessionHeader, /; Secure/);
+  assert.equal(session.status.headers["cache-control"], "no-store");
+  assert.equal(session.status.headers["strict-transport-security"], "max-age=31536000");
+  assert.equal(session.status.headers["x-frame-options"], "DENY");
+  assert.equal(session.status.headers["x-content-type-options"], "nosniff");
+  assert.equal(session.status.headers["permissions-policy"], "camera=(), microphone=(), geolocation=()");
+  for (const value of ["private-access", "private-refresh", secret]) assert.equal(session.status.text.includes(value), false);
+  assert.equal((await app.request("/api/auth/status", { host: "attacker.example" })).status, 403);
+});
+
+test("yêu cầu lịch sai không gọi Google; thiếu đăng nhập, sai CSRF, JSON hỏng và body lớn bị chặn", async t => {
+  const app = await setup(t);
+  assert.equal((await app.request("/api/calendar/events")).status, 401);
+  const session = await app.connect();
+  const before = app.calls.length;
+  const options = { method: "POST", cookie: session.cookie, csrf: session.csrf };
+  assert.equal((await app.request("/api/calendar/events", { ...options, csrf: "wrong", body: {} })).status, 403);
+  assert.equal((await app.request("/api/calendar/events", { ...options, rawBody: "{broken" })).status, 400);
+  assert.equal((await app.request("/api/calendar/events", { ...options, body: { summary: "invalid" } })).status, 400);
+  assert.equal((await app.request("/api/calendar/events", { ...options, rawBody: "a".repeat(65537) })).status, 413);
+  assert.equal((await app.request("/api/calendar/events/abcdef123", { ...options, method: "PATCH", body: {} })).status, 403);
+  assert.equal(app.calls.length, before);
 });

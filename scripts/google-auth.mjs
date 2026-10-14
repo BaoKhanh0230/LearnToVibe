@@ -1,6 +1,7 @@
 import { randomBytes, createHash, timingSafeEqual } from "node:crypto";
 import { CALENDAR_SCOPE } from "../src/calendar.js";
 import { sessionKey } from "./session-store.mjs";
+import { normalizeCalendarEvent } from "./calendar-validation.mjs";
 
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
 const CALENDAR_URL = "https://www.googleapis.com/calendar/v3/calendars/primary/events";
@@ -158,12 +159,8 @@ export function createGoogleAuth({ origin, clientId, clientSecret, store, fetche
       if (match[1] && !match[1].startsWith("vibelog")) { json(response, 403, { error: "Chỉ được cập nhật sự kiện do VibeLog tạo." }); return true; }
       let body;
       if (request.method !== "GET") {
-        body = await readBody(request);
-        if (!body || typeof body.summary !== "string" || body.summary.length > 200 || !body.start?.dateTime || !body.end?.dateTime || !body.extendedProperties?.private?.vibelogId || (request.method === "POST" && !/^vibelog[0-9a-f]{64}$/.test(body.id ?? ""))) {
-          json(response, 400, { error: "Dữ liệu sự kiện không hợp lệ." }); return true;
-        }
-        // Do not proxy attendees, attachments, conference settings, or arbitrary event fields.
-        body = { ...(request.method === "POST" ? { id: body.id } : {}), summary: body.summary, description: typeof body.description === "string" ? body.description.slice(0, 10000) : "", start: { dateTime: body.start.dateTime }, end: { dateTime: body.end.dateTime }, extendedProperties: { private: body.extendedProperties.private }, reminders: body.reminders };
+        // Do not proxy attendees, attachments, arbitrary metadata or reminder fields.
+        body = normalizeCalendarEvent(await readBody(request), request.method);
       }
       const target = new URL(`${CALENDAR_URL}${match[1] ? `/${match[1]}` : ""}`);
       for (const key of ["timeMin", "timeMax", "timeZone", "pageToken", "singleEvents", "orderBy", "showDeleted", "maxResults"]) if (url.searchParams.has(key)) target.searchParams.set(key, url.searchParams.get(key));

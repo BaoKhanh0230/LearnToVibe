@@ -46,6 +46,8 @@ Workflow tại `.github/workflows/ci-cd.yml` tự động chạy khi push hoặc
 
 Ở local, `npm start` vẫn dùng kho file như trước nếu không đặt `DATABASE_URL`.
 
+Xem [kiểm thử, kiểm tra bảo mật và lộ trình học cho môi trường doanh nghiệp](docs/testing-security.md) để biết phạm vi đã kiểm chứng, cách nghiệm thu deployment thật và các giới hạn còn lại.
+
 ### Đăng nhập trên GitHub Pages (bản công khai)
 
 GitHub Pages chỉ phục vụ HTML/CSS/JavaScript; nó không chạy `scripts/server.mjs` hay đọc `.env`. Trước đây, gọi `/api/auth/connect` trên Pages nhận HTML lỗi thay vì JSON, gây `Unexpected token '<'`. Bản Pages hiện dùng **Google Identity Services token model**: mỗi người chọn tài khoản, cấp quyền và đọc/ghi lịch chính của chính mình trực tiếp qua Google API. Bản Node.js giữ luồng cookie và refresh token như trước.

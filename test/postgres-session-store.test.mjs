@@ -55,6 +55,9 @@ test("phiên hết hạn bị loại và đổi khóa/đổi ID làm dữ liệu
   const wrongKey = new PostgresSessionStore(pool, randomBytes(32).toString("base64"));
   assert.throws(() => wrongKey.decrypt("user", store.encrypt("user", record)));
   assert.throws(() => store.decrypt("another-user", store.encrypt("user", record)));
+  const tampered = Buffer.from(store.encrypt("user", record), "base64");
+  tampered[tampered.length - 1] ^= 1;
+  assert.throws(() => store.decrypt("user", tampered.toString("base64")));
   assert.throws(() => new PostgresSessionStore(pool, "bad-key"), /32 byte/);
   const restarted = new PostgresSessionStore(pool, key, () => 1000);
   await restarted.initialize();
