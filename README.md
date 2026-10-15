@@ -1,5 +1,7 @@
 # VibeLog
 
+**Theo dõi buổi học và project:** [Nhật ký học tập, trạng thái hiện tại và kế hoạch buổi tiếp theo](docs/learning-log.md). Đọc trang này khi tiếp tục project; cập nhật sau mỗi buổi để phân biệt phần đã làm, đã kiểm chứng và còn thiếu.
+
 VibeLog là nhật ký nhỏ dành cho hành trình học và vibe code. Bạn có thể ghi lại mình vừa làm gì, học trong bao lâu, cảm thấy thế nào và rút ra điều gì. Dữ liệu được lưu trong trình duyệt bằng `localStorage`.
 
 Bạn cũng có thể sửa, tìm kiếm và lọc các phiên học đã ghi. Hình Doro trong thư mục `image` được dùng làm favicon và biểu tượng của dự án.

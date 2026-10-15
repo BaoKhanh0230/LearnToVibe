@@ -1,5 +1,7 @@
 # Deployment VibeLog — 14/10/2026
 
+Tài liệu lịch sử cho Render + Neon. Website chính thức đã chuyển sang Vercel + Supabase ngày 15/10/2026; xem [tiến độ hiện tại](learning-log.md) và [hướng dẫn migration](vercel-supabase.md).
+
 ## Tài nguyên đã tạo
 
 - Website Node.js: https://vibelog-baokhanh.onrender.com

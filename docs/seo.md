@@ -20,6 +20,8 @@ Mục tiêu đầu tiên: tìm được VibeLog bằng tên và công dụng, v�
 
 ## Thực hành Search Console
 
+Tiến độ ngày 15/10/2026: chủ tài khoản đã gửi yêu cầu lập chỉ mục và báo Google đưa URL vào hàng đợi ưu tiên thu thập. Chưa có xác nhận URL đã được lập chỉ mục hoặc sitemap báo Success. Xem [nhật ký học tập](learning-log.md) để tiếp tục ở buổi sau.
+
 1. Vào https://search.google.com/search-console bằng tài khoản Google của bạn.
 2. Thêm tài sản loại **URL prefix / Tiền tố URL**: `https://vibelog-baokhanh.vercel.app/`. Với domain do Vercel cấp, dùng cách này vì bạn không quản lý DNS của `vercel.app`.
 3. Chọn **HTML tag / Thẻ HTML**. Chủ tài khoản đã cung cấp thẻ mới cho property Vercel (`T4FObJz1n84jD0snZ2-2FXHQp3cHjugh9HaiJ14HW2o`); thẻ đã được thêm vào source cùng thẻ cũ của Render. Sau khi bản mới deploy và nguồn HTML công khai có đúng thẻ, bấm **Verify / Xác minh**. Chưa coi việc thêm thẻ là xác minh đã thành công; cần kết quả từ Search Console.
