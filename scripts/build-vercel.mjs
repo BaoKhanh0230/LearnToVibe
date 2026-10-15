@@ -13,7 +13,7 @@ export function buildVercel({ root = process.cwd(), output = resolve(root, "_sit
   }
   for (const name of ["index.html", "robots.txt", "sitemap.xml"]) {
     const file = resolve(output, name);
-    writeFileSync(file, readFileSync(file, "utf8").replaceAll("https://vibelog-baokhanh.onrender.com", url.origin));
+    writeFileSync(file, readFileSync(file, "utf8").replaceAll("https://vibelog-baokhanh.vercel.app", url.origin));
   }
   // Keep auto mode: Google credentials and persistent sessions stay in the API.
 }

@@ -2,15 +2,18 @@
 
 Vercel thay phần website/API của Render. Supabase PostgreSQL thay kho phiên của Neon. Việc đổi database đơn lẻ không giải quyết hàng đợi deploy của hosting. Không có nền tảng miễn phí nào bảo đảm mọi lần deploy đều tức thời.
 
-## Tình trạng chuẩn bị ngày 15/10/2026
+## Tình trạng triển khai ngày 15/10/2026
 
 - Project Vercel đã tạo: `vibelog-baokhanh`, ID `prj_WP8kAr2WCctB4azJslBJCIfyLs2s`.
 - Domain Vercel xác nhận: `vibelog-baokhanh.vercel.app`.
-- Chưa deploy hoặc đổi website chính thức; chưa kiểm chứng runtime Vercel thật.
+- Website chính thức: https://vibelog-baokhanh.vercel.app/. Deployment `dpl_2VDmuaMGJr2hyLqWYws99nW9g5Qo` dùng commit `862c44a2d8a5c2cf3e86bbd590addd3d2a39172c` đạt READY. Bản cập nhật tài liệu/canonical tiếp theo tiếp tục cần CI và deploy.
 - Supabase organization do chủ tài khoản chọn: `BaoKhanh0230's Org`, ID `ehaiykbgwjygpxivmkgx`, plan Free.
 - Chủ tài khoản đã tạo project `VibeLog`, ref `bpdigfubhbzeppknsfmd`, vùng Seoul (`ap-northeast-2`), trạng thái `ACTIVE_HEALTHY`. Giữ nguyên vùng đã chọn.
 - Migration bảng phiên đã áp dụng: RLS bật, thu hồi quyền `anon`/`authenticated`.
-- Biến production Vercel đã cấu hình: APP_URL, Google Client ID/Secret và khóa mã hóa phiên mới. Chủ tài khoản đã cho phép rõ chuyển các khóa sang Vercel. Chờ DATABASE_URL để kiểm tra runtime.
+- Biến production Vercel đã cấu hình: APP_URL, Google Client ID/Secret, khóa mã hóa phiên mới, DATABASE_URL và DATABASE_CA_CERT. Chủ tài khoản đã cho phép rõ chuyển các khóa sang Vercel. Lỗi URL, chứng chỉ và mật khẩu đã được xử lý; health/auth status trả 200, API lịch chưa đăng nhập trả 401.
+- Smoke test website thật đạt: cookie Secure/HttpOnly/SameSite, PKCE S256, chặn Origin lạ, file riêng 404, robots/sitemap đúng URL. Luồng OAuth hủy thử nghiệm được lưu/đọc trong Supabase qua các HTTP request rồi tiêu thụ một lần; callback phát lại bị chặn. Không truy cập Google Calendar thật trong bài này.
+- Đăng nhập Google thật, tải/ghi lịch và giữ kết nối sau refresh còn cần chủ tài khoản nghiệm thu. Không đánh dấu các bước này đã đạt chỉ từ health check.
+- Chứng chỉ Supabase Root 2021 CA được tải từ `https://supabase-downloads.s3-ap-southeast-1.amazonaws.com/prod/ssl/prod-ca-2021.crt`; URL đã đối chiếu với `apps/studio/hooks/custom-content/custom-content.json` trong repository chính thức `supabase/supabase`. Giữ xác minh CA/hostname bật.
 - Công cụ kiểm tra chi phí Supabase báo không khả dụng; project được chủ tài khoản tạo qua Dashboard.
 
 ## Thay đổi kỹ thuật
@@ -21,7 +24,7 @@ OAuth state và PKCE verifier nay được mã hóa trong kho phiên, có hạn 
 
 `vercel.json` chuyển `/api/*` và `/healthz` tới function, phục vụ tài nguyên công khai từ `_site`. Build không đóng gói `.env`, database, migration hay source máy chủ vào thư mục website. Handler hỗ trợ cả request body dạng stream và dạng đã được runtime phân tích.
 
-`scripts/build-vercel.mjs` yêu cầu `APP_URL` HTTPS và cập nhật canonical, Open Graph URL, robots/sitemap trong artifact theo địa chỉ mới. Source Render/Pages giữ URL cũ đến khi thực sự chuyển website chính thức. Không coi việc chuẩn bị cấu hình là deploy thành công.
+`scripts/build-vercel.mjs` yêu cầu `APP_URL` HTTPS và cập nhật canonical, Open Graph URL, robots/sitemap trong artifact theo địa chỉ cấu hình. Source/Pages hiện ưu tiên Vercel. Render auto-deploy vẫn tắt; không tự cập nhật hoặc xóa dịch vụ cũ.
 
 ## Hoàn tất Supabase
 

@@ -40,9 +40,9 @@ Workflow tại `.github/workflows/ci-cd.yml` tự động chạy khi push hoặc
 
 ## SEO và Google Search
 
-Xem [bài học và hướng dẫn Search Console](docs/seo.md). Trang chủ khai báo bản Render là địa chỉ chính thức; máy chủ và bản build Pages phục vụ `robots.txt`/`sitemap.xml`. Thẻ xác minh đã được thêm vào mã nguồn; cần triển khai bản mới rồi xác minh, gửi sitemap và kiểm tra URL trong tài khoản Search Console của chủ website.
+Xem [bài học và hướng dẫn Search Console](docs/seo.md). Địa chỉ chính thức hiện là https://vibelog-baokhanh.vercel.app/ với backend Vercel và kho phiên Supabase. Trang chủ và bản Pages khai báo canonical về Vercel. Sau khi deploy, thêm property URL prefix mới trong Search Console, xác minh bằng mã Google cấp cho property đó, gửi sitemap và kiểm tra URL.
 
-Phương án thay hosting đang chuẩn bị: [Vercel + Supabase](docs/vercel-supabase.md), gồm trạng thái thực tế, thiết lập database, callback Google và cách nghiệm thu trước khi chuyển địa chỉ chính thức.
+Xem [Vercel + Supabase](docs/vercel-supabase.md) để biết trạng thái kiểm chứng, thiết lập database, callback Google và bước nghiệm thu trình duyệt còn lại. Render/Neon cũ vẫn được giữ trong thời gian chuyển đổi.
 
 ## Kết nối Google Calendar
 

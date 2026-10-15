@@ -3,4 +3,4 @@ Allow: /
 Disallow: /api/
 Disallow: /healthz
 
-Sitemap: https://vibelog-baokhanh.onrender.com/sitemap.xml
+Sitemap: https://vibelog-baokhanh.vercel.app/sitemap.xml

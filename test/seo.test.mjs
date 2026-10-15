@@ -7,7 +7,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { request } from "node:http";
 
-const canonical = "https://vibelog-baokhanh.onrender.com/";
+const canonical = "https://vibelog-baokhanh.vercel.app/";
 
 test("crawler đọc trang chủ và sitemap trước đăng nhập; file riêng vẫn bị chặn", async t => {
   const directory = mkdtempSync(join(tmpdir(), "vibelog-seo-"));
@@ -56,7 +56,7 @@ test("crawler đọc trang chủ và sitemap trước đăng nhập; file riêng
   }
 });
 
-test("Pages giữ canonical về Render và đóng gói sitemap công khai", t => {
+test("Pages giữ canonical về Vercel và đóng gói sitemap công khai", t => {
   const output = mkdtempSync(join(tmpdir(), "vibelog-seo-pages-"));
   t.after(() => rmSync(output, { recursive: true, force: true }));
   buildPages({ output, clientId: "public.apps.googleusercontent.com" });
