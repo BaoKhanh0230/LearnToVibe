@@ -52,13 +52,18 @@ export class PostgresSessionStore {
   }
 }
 
-export async function connectPostgresStore({ databaseUrl, encryptionKey }) {
+export async function connectPostgresStore({ databaseUrl, encryptionKey, databaseCa = process.env.DATABASE_CA_CERT }) {
   const { default: pg } = await import("pg");
   const url = new URL(databaseUrl);
   if (!["postgres:", "postgresql:"].includes(url.protocol)) throw new Error("DATABASE_URL phải là địa chỉ PostgreSQL.");
-  url.searchParams.set("sslmode", "verify-full");
+  let ssl;
+  if (databaseCa) {
+    // pg connection-string SSL options otherwise override the explicit CA.
+    for (const key of ["sslmode", "sslcert", "sslkey", "sslrootcert"]) url.searchParams.delete(key);
+    ssl = { rejectUnauthorized: true, ca: databaseCa.replaceAll("\\n", "\n") };
+  } else url.searchParams.set("sslmode", "verify-full");
   const pool = new pg.Pool({ connectionString: url.href, max: 3, idleTimeoutMillis: 10000,
-    connectionTimeoutMillis: 15000, statement_timeout: 15000 });
+    connectionTimeoutMillis: 15000, statement_timeout: 15000, ...(ssl ? { ssl } : {}) });
   pool.on("error", () => console.error("Kho phiên PostgreSQL tạm thời mất kết nối."));
   try {
     const store = new PostgresSessionStore(pool, encryptionKey);

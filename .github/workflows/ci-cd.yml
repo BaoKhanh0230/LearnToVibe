@@ -41,6 +41,9 @@ jobs:
       - name: Check Pages integration syntax
         run: node --check src/google-config.js && node --check src/calendar-deployment.js && node --check scripts/build-pages.mjs
 
+      - name: Check Vercel integration syntax
+        run: node --check api/index.js && node --check scripts/build-vercel.mjs
+
   deploy:
     name: Deploy to GitHub Pages
     if: github.event_name != 'pull_request' && vars.ENABLE_PAGES == 'true'

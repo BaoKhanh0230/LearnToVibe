@@ -42,6 +42,8 @@ Workflow tại `.github/workflows/ci-cd.yml` tự động chạy khi push hoặc
 
 Xem [bài học và hướng dẫn Search Console](docs/seo.md). Trang chủ khai báo bản Render là địa chỉ chính thức; máy chủ và bản build Pages phục vụ `robots.txt`/`sitemap.xml`. Thẻ xác minh đã được thêm vào mã nguồn; cần triển khai bản mới rồi xác minh, gửi sitemap và kiểm tra URL trong tài khoản Search Console của chủ website.
 
+Phương án thay hosting đang chuẩn bị: [Vercel + Supabase](docs/vercel-supabase.md), gồm trạng thái thực tế, thiết lập database, callback Google và cách nghiệm thu trước khi chuyển địa chỉ chính thức.
+
 ## Kết nối Google Calendar
 
 ### Máy chủ miễn phí và kết nối lâu dài trên mạng

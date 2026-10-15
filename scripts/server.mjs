@@ -13,7 +13,7 @@ const contentTypes = {
   ".txt": "text/plain; charset=utf-8", ".xml": "application/xml; charset=utf-8",
 };
 
-export function createVibeLogServer({
+export function createVibeLogHandler({
   root = process.cwd(), origin = process.env.APP_URL || "http://localhost:4173",
   clientId = process.env.GOOGLE_CLIENT_ID, clientSecret = process.env.GOOGLE_CLIENT_SECRET,
   dataDirectory = resolve(root, ".vibelog-data"), fetcher = globalThis.fetch,
@@ -25,7 +25,7 @@ export function createVibeLogServer({
   const absoluteRoot = realpathSync(root);
   const store = sessionStore ?? new SessionStore(dataDirectory);
   const auth = createGoogleAuth({ origin, clientId, clientSecret, store, fetcher });
-  return createServer(async (request, response) => {
+  return async (request, response) => {
     response.setHeader("X-Content-Type-Options", "nosniff");
     response.setHeader("Referrer-Policy", "same-origin");
     response.setHeader("X-Frame-Options", "DENY");
@@ -54,7 +54,11 @@ export function createVibeLogServer({
       if (request.method === "HEAD") response.end();
       else { const stream = createReadStream(file); stream.on("error", () => response.destroy()); stream.pipe(response); }
     } catch { if (!response.headersSent) json(response, 400, { error: "Yêu cầu không hợp lệ." }); else response.destroy(); }
-  });
+  };
+}
+
+export function createVibeLogServer(options) {
+  return createServer(createVibeLogHandler(options));
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {

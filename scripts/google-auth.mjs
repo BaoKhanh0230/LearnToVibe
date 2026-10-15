@@ -20,6 +20,14 @@ export function json(response, status, body) {
 }
 
 async function readBody(request) {
+  // Serverless runtimes can parse the body before invoking the Node handler.
+  if (request.body !== undefined) {
+    const text = Buffer.isBuffer(request.body) ? request.body.toString("utf8")
+      : typeof request.body === "string" ? request.body : JSON.stringify(request.body);
+    if (Buffer.byteLength(text) > 65536) throw Object.assign(new Error("Nội dung lịch quá lớn."), { status: 413 });
+    try { return JSON.parse(text); }
+    catch { throw Object.assign(new Error("Dữ liệu gửi lên không hợp lệ."), { status: 400 }); }
+  }
   let size = 0;
   const chunks = [];
   for await (const chunk of request) {
@@ -107,7 +115,9 @@ export function createGoogleAuth({ origin, clientId, clientSecret, store, fetche
         const state = random();
         const browser = random();
         const verifier = random();
-        pending.set(state, { browser, verifier, expiresAt: now() + 600000, oldId: id });
+        const flow = { browser, verifier, expiresAt: now() + 600000, oldId: id, clientId };
+        await store.set(`oauth:${sessionKey(state)}`, flow);
+        pending.set(state, { expiresAt: flow.expiresAt });
         response.setHeader("Set-Cookie", cookie("vibelog_oauth", browser, 600, "/api/auth"));
         const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
         authUrl.search = new URLSearchParams({
@@ -120,8 +130,10 @@ export function createGoogleAuth({ origin, clientId, clientSecret, store, fetche
       }
       if (path === "/api/auth/callback" && request.method === "GET") {
         const state = url.searchParams.get("state");
-        const flow = pending.get(state);
-        if (!flow || flow.expiresAt <= now() || !equal(flow.browser, cookieValue(request, "vibelog_oauth"))) { redirect(response, "invalid-state"); return true; }
+        const flowId = typeof state === "string" && /^[A-Za-z0-9_-]{43}$/.test(state) ? `oauth:${sessionKey(state)}` : null;
+        const flow = flowId ? await store.get(flowId) : null;
+        if (!flow || flow.clientId !== clientId || flow.expiresAt <= now() || !equal(flow.browser, cookieValue(request, "vibelog_oauth"))) { redirect(response, "invalid-state"); return true; }
+        if (!await store.deleteIfCurrent(flowId, flow)) { redirect(response, "invalid-state"); return true; }
         pending.delete(state);
         response.setHeader("Set-Cookie", cookie("vibelog_oauth", "", 0, "/api/auth"));
         if (url.searchParams.has("error")) { redirect(response, "cancelled"); return true; }

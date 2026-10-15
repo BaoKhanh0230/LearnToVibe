@@ -186,6 +186,18 @@ test("callback phải khớp state và cookie, không chấp nhận phát lại"
   assert.match((await app.request(path, { cookie })).headers.location, /invalid-state/);
 });
 
+test("OAuth callback qua máy chủ mới vẫn dùng state/PKCE bền vững và chỉ tiêu thụ một lần", async t => {
+  const app = await setup(t, { postgres: true });
+  const response = await app.request("/api/auth/connect", { method: "POST" });
+  const url = new URL(response.data.url);
+  const path = `/api/auth/callback?state=${url.searchParams.get("state")}&code=code`;
+  const cookie = response.headers["set-cookie"][0].split(";")[0];
+  await app.restart();
+  assert.match((await app.request(path, { cookie })).headers.location, /connected/);
+  await app.restart();
+  assert.match((await app.request(path, { cookie })).headers.location, /invalid-state/);
+});
+
 test("ghi lịch và ngắt kết nối cần Origin cùng CSRF, từ chối proxy tùy ý", async t => {
   const app = await setup(t);
   const session = await app.connect();
