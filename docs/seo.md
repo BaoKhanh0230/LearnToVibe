@@ -22,7 +22,7 @@ Mục tiêu đầu tiên: tìm được VibeLog bằng tên và công dụng, v�
 
 1. Vào https://search.google.com/search-console bằng tài khoản Google của bạn.
 2. Thêm tài sản loại **URL prefix / Tiền tố URL**: `https://vibelog-baokhanh.vercel.app/`. Với domain do Vercel cấp, dùng cách này vì bạn không quản lý DNS của `vercel.app`.
-3. Chọn **HTML tag / Thẻ HTML**. Thêm property URL prefix mới cho địa chỉ Vercel. Thẻ cũ của property Render vẫn có trong source, nhưng không mặc định dùng được cho property mới: lấy đúng thẻ Google hiển thị cho URL Vercel rồi thêm vào source trước khi Verify. Giữ thẻ của các chủ sở hữu đang cần dùng.
+3. Chọn **HTML tag / Thẻ HTML**. Chủ tài khoản đã cung cấp thẻ mới cho property Vercel (`T4FObJz1n84jD0snZ2-2FXHQp3cHjugh9HaiJ14HW2o`); thẻ đã được thêm vào source cùng thẻ cũ của Render. Sau khi bản mới deploy và nguồn HTML công khai có đúng thẻ, bấm **Verify / Xác minh**. Chưa coi việc thêm thẻ là xác minh đã thành công; cần kết quả từ Search Console.
 4. Sau xác minh, vào **Sitemaps / Sơ đồ trang web**, gửi `https://vibelog-baokhanh.vercel.app/sitemap.xml` (hoặc `sitemap.xml` nếu giao diện đã điền sẵn tiền tố).
 5. Mở **URL Inspection / Kiểm tra URL**, nhập URL trang chủ; chạy **Test live URL / Kiểm tra URL đang hoạt động**. Nếu trang truy cập được và phù hợp lập chỉ mục, chọn **Request indexing / Yêu cầu lập chỉ mục**. Không cần gửi lặp lại liên tục.
 6. Theo dõi **Page indexing / Lập chỉ mục trang** để biết Google đã index chưa hoặc lý do chưa index. Trong **Performance / Hiệu suất**, xem impressions (lượt hiển thị), clicks (lượt nhấp), queries (cụm từ tìm kiếm), CTR (nhấp/hiển thị). Dữ liệu không xuất hiện ngay; thời gian crawl có thể từ vài ngày đến vài tuần và không bảo đảm index.
