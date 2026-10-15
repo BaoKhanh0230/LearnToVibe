@@ -19,10 +19,14 @@ export default async function handler(request, response) {
     initializing ??= initialize().catch(error => { initializing = undefined; throw error; });
     const handle = await initializing;
     await handle(request, response);
-  } catch {
+  } catch (error) {
+    const code = typeof error?.code === "string" && /^[A-Z0-9_]{1,64}$/.test(error.code)
+      ? error.code : "INITIALIZATION_FAILED";
+    // Log only a bounded error code: database URLs and credentials stay private.
+    console.error("VibeLog server initialization:", code);
     if (!response.headersSent) {
       response.writeHead(503, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store", "X-Robots-Tag": "noindex" });
-      response.end(JSON.stringify({ error: "Máy chủ chưa sẵn sàng. Hãy thử lại sau." }));
+      response.end(JSON.stringify({ error: "Máy chủ chưa sẵn sàng. Hãy thử lại sau.", code }));
     } else response.destroy();
   }
 }
