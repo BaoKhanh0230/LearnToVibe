@@ -9,7 +9,7 @@ export function buildPages({ root = process.cwd(), output = resolve(root, "_site
     throw new Error("Pages cần GOOGLE_CLIENT_ID (repository variable) hoặc clientId trong src/google-config.js. Không dùng Client Secret.");
   }
   mkdirSync(output, { recursive: true });
-  for (const name of ["index.html", "styles.css", "src", "image"]) cpSync(resolve(root, name), resolve(output, name), { recursive: true });
+  for (const name of ["index.html", "styles.css", "robots.txt", "sitemap.xml", "src", "image"]) cpSync(resolve(root, name), resolve(output, name), { recursive: true });
   writeFileSync(resolve(output, "src/google-config.js"), `// Public OAuth configuration; contains no secrets.\nexport const googleConfig = ${JSON.stringify({ mode: "browser", clientId })};\n`);
   writeFileSync(resolve(output, ".nojekyll"), "");
 }

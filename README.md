@@ -38,6 +38,10 @@ Workflow tại `.github/workflows/ci-cd.yml` tự động chạy khi push hoặc
 
 ## Chạy dự án
 
+## SEO và Google Search
+
+Xem [bài học và hướng dẫn Search Console](docs/seo.md). Trang chủ khai báo bản Render là địa chỉ chính thức; máy chủ và bản build Pages phục vụ `robots.txt`/`sitemap.xml`. Thẻ xác minh đã được thêm vào mã nguồn; cần triển khai bản mới rồi xác minh, gửi sitemap và kiểm tra URL trong tài khoản Search Console của chủ website.
+
 ## Kết nối Google Calendar
 
 ### Máy chủ miễn phí và kết nối lâu dài trên mạng

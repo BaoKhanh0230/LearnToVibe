@@ -10,6 +10,7 @@ const contentTypes = {
   ".css": "text/css; charset=utf-8", ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8", ".json": "application/json; charset=utf-8",
   ".jpg": "image/jpeg", ".png": "image/png", ".svg": "image/svg+xml",
+  ".txt": "text/plain; charset=utf-8", ".xml": "application/xml; charset=utf-8",
 };
 
 export function createVibeLogServer({
@@ -32,6 +33,9 @@ export function createVibeLogServer({
     if (appUrl.protocol === "https:") response.setHeader("Strict-Transport-Security", "max-age=31536000");
     try {
       const url = new URL(request.url, origin);
+      if (url.pathname.startsWith("/api/") || url.pathname === "/healthz") {
+        response.setHeader("X-Robots-Tag", "noindex");
+      }
       if (url.pathname === "/healthz" && request.method === "GET") {
         json(response, 200, { status: "ok" }); return;
       }
@@ -39,7 +43,7 @@ export function createVibeLogServer({
       if (!["GET", "HEAD"].includes(request.method)) { json(response, 405, { error: "Phương thức không được hỗ trợ." }); return; }
       const path = decodeURIComponent(url.pathname);
       // Only public application assets are served; credentials and server code are private.
-      if (!(/^(?:\/|\/index\.html|\/styles\.css)$/.test(path) || /^\/(src|image)\//.test(path)) || path.split(/[\\/]/).some((part) => part.startsWith("."))) {
+      if (!(/^(?:\/|\/index\.html|\/styles\.css|\/robots\.txt|\/sitemap\.xml)$/.test(path) || /^\/(src|image)\//.test(path)) || path.split(/[\\/]/).some((part) => part.startsWith("."))) {
         json(response, 404, { error: "Không tìm thấy trang." }); return;
       }
       const file = resolve(absoluteRoot, path === "/" ? "index.html" : `.${path}`);
