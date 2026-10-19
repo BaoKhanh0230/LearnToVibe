@@ -26,6 +26,7 @@ export class PersistentGoogleCalendar extends GoogleCalendar {
     this.configured = data.configured === true;
     this.loginConfig = data.loginConfig ?? null;
     this.authenticated = data.connected === true;
+    this.user = data.user ?? null;
     this.csrfToken = data.csrfToken ?? null;
     // A session marker for inherited account-change guards, not a Google token.
     this.token = this.csrfToken;
@@ -34,6 +35,7 @@ export class PersistentGoogleCalendar extends GoogleCalendar {
   }
 
   async connect() {
+    if (typeof globalThis.window?.dispatchEvent === 'function' && !window.dispatchEvent(new Event('vibelog:before-account-change', { cancelable: true }))) throw new Error('Còn dữ liệu chưa đồng bộ. Hãy xử lý ở phần tài khoản trước.');
     const response = await this.fetcher("/api/auth/connect", { method: "POST", credentials: "same-origin", headers: { "X-VibeLog-Request": "1" } });
     const data = await apiData(response);
     if (!response.ok) throw new Error(data.error || "Chưa bắt đầu được kết nối Google.");

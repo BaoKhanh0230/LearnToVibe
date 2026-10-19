@@ -2,6 +2,7 @@ import { randomBytes, createHash, timingSafeEqual } from "node:crypto";
 import { CALENDAR_SCOPE } from "../src/calendar.js";
 import { sessionKey } from "./session-store.mjs";
 import { normalizeCalendarEvent } from "./calendar-validation.mjs";
+import { validateUserData, updateUserProfile } from "./user-data.mjs";
 
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
 const CALENDAR_URL = "https://www.googleapis.com/calendar/v3/calendars/primary/events";
@@ -39,7 +40,7 @@ async function readBody(request) {
   catch { throw Object.assign(new Error("Dữ liệu gửi lên không hợp lệ."), { status: 400 }); }
 }
 
-export function createGoogleAuth({ origin, clientId, clientSecret, store, fetcher = globalThis.fetch, now = Date.now }) {
+export function createGoogleAuth({ origin, clientId, clientSecret, store, userDataStore, fetcher = globalThis.fetch, now = Date.now }) {
   const configured = Boolean(clientId && clientSecret && !clientId.startsWith("your-") && !clientSecret.startsWith("your-"));
   const secure = new URL(origin).protocol === "https:";
   const pending = new Map();
@@ -56,6 +57,19 @@ export function createGoogleAuth({ origin, clientId, clientSecret, store, fetche
     const record = id ? await store.get(id) : null;
     return { id, record: record?.clientId === clientId ? record : null };
   };
+
+  async function disableCalendar(id, clearTokens = false) {
+    // A token refresh may have updated the session since the request began.
+    // Retry CAS against the latest record so disconnect cannot silently lose that race.
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const current = await store.get(id);
+      if (!current) return null;
+      const next = { ...current, calendarGranted: false,
+        ...(clearTokens ? { accessToken: null, refreshToken: null } : {}) };
+      if (await store.replace(id, current, next)) return current;
+    }
+    throw new Error('Phiên Google đang thay đổi. Thử ngắt lại.');
+  }
 
   async function tokenRequest(values) {
     const result = await fetcher(TOKEN_URL, {
@@ -81,7 +95,7 @@ export function createGoogleAuth({ origin, clientId, clientSecret, store, fetche
         if (!await store.replace(id, record, next)) throw Object.assign(new Error("Kết nối Google đã thay đổi."), { status: 401 });
         return next.accessToken;
       } catch (error) {
-        if (error.invalidGrant) { await store.deleteIfCurrent(id, record); error.status = 401; error.message = "Google yêu cầu kết nối lại. Nhật ký và kế hoạch vẫn được giữ."; }
+        if (error.invalidGrant) { await store.replace(id, record, { ...record, calendarGranted: false }); error.status = 401; error.message = "Google yêu cầu kết nối lại. Nhật ký và kế hoạch vẫn được giữ."; }
         throw error;
       }
     })();
@@ -102,7 +116,8 @@ export function createGoogleAuth({ origin, clientId, clientSecret, store, fetche
       }
       if (path === "/api/auth/status" && request.method === "GET") {
         json(response, 200, {
-          configured, connected: Boolean(configured && record),
+          configured, connected: Boolean(configured && record && record.calendarGranted !== false),
+          user: record?.user ?? null, cloudAvailable: Boolean(userDataStore),
           ...(configured ? { loginConfig: { clientId, redirectUri } } : {}),
           ...(configured && record ? { csrfToken: record.csrfToken } : {}),
         });
@@ -121,7 +136,7 @@ export function createGoogleAuth({ origin, clientId, clientSecret, store, fetche
         response.setHeader("Set-Cookie", cookie("vibelog_oauth", browser, 600, "/api/auth"));
         const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
         authUrl.search = new URLSearchParams({
-          client_id: clientId, redirect_uri: redirectUri, response_type: "code", scope: CALENDAR_SCOPE,
+          client_id: clientId, redirect_uri: redirectUri, response_type: "code", scope: `openid email profile ${CALENDAR_SCOPE}`,
           access_type: "offline", prompt: "consent select_account", state,
           code_challenge: createHash("sha256").update(verifier).digest("base64url"), code_challenge_method: "S256",
         }).toString();
@@ -141,10 +156,19 @@ export function createGoogleAuth({ origin, clientId, clientSecret, store, fetche
         if (!code) { redirect(response, "failed"); return true; }
         try {
           const data = await tokenRequest({ grant_type: "authorization_code", code, redirect_uri: redirectUri, code_verifier: flow.verifier });
-          if (!data.refresh_token || !data.scope?.split(" ").includes(CALENDAR_SCOPE)) { redirect(response, "missing-permission"); return true; }
+          // Fetch identity over Google's authenticated HTTPS endpoint; never trust a browser-supplied ID/email.
+          const identityResponse = await fetcher("https://openidconnect.googleapis.com/v1/userinfo", {
+            headers: { Authorization: `Bearer ${data.access_token}` }, signal: AbortSignal.timeout(15000),
+          });
+          const identity = await identityResponse.json();
+          if (!identityResponse.ok || typeof identity.sub !== "string" || !identity.sub || identity.sub.length > 255) throw new Error("Google chưa xác nhận tài khoản.");
+          const user = { id: createHash("sha256").update(`google:${identity.sub}`).digest("hex"),
+            email: typeof identity.email === "string" ? identity.email.slice(0, 320) : "",
+            name: typeof identity.name === "string" ? identity.name.slice(0, 200) : "" };
+          const calendarGranted = Boolean(data.refresh_token && data.scope?.split(" ").includes(CALENDAR_SCOPE));
           const sessionCookie = random();
           const newId = sessionKey(sessionCookie);
-          await store.set(newId, { clientId, csrfToken: random(), refreshToken: data.refresh_token, accessToken: data.access_token, accessExpiresAt: now() + Number(data.expires_in) * 1000, expiresAt: now() + SESSION_SECONDS * 1000 });
+          await store.set(newId, { user, calendarGranted, clientId, csrfToken: random(), refreshToken: data.refresh_token, accessToken: data.access_token, accessExpiresAt: now() + Number(data.expires_in) * 1000, expiresAt: now() + SESSION_SECONDS * 1000 });
           if (flow.oldId) await store.delete(flow.oldId);
           response.setHeader("Set-Cookie", [cookie("vibelog_oauth", "", 0, "/api/auth"), cookie("vibelog_session", sessionCookie, SESSION_SECONDS)]);
           redirect(response, "connected");
@@ -153,17 +177,45 @@ export function createGoogleAuth({ origin, clientId, clientSecret, store, fetche
       }
       if (!record) { json(response, 401, { error: "Hãy kết nối Google Calendar để xem hoặc gửi lịch." }); return true; }
       if (request.method !== "GET" && !equal(request.headers["x-vibelog-csrf"], record.csrfToken)) { json(response, 403, { error: "Phiên thao tác đã thay đổi. Hãy tải lại trang." }); return true; }
-      if (path === "/api/auth/disconnect" && request.method === "POST") {
+      if (path === "/api/auth/logout" && request.method === "POST") {
         await store.delete(id);
         response.setHeader("Set-Cookie", cookie("vibelog_session", "", 0));
+        json(response, 200, { signedOut: true }); return true;
+      }
+      if (path === '/api/user/profile') {
+        if (!record.user) { json(response, 401, { error: 'Hãy đăng nhập lại để cập nhật hồ sơ.' }); return true; }
+        if (!userDataStore) { json(response, 503, { error: 'Chưa lưu được hồ sơ. Vui lòng thử lại sau.' }); return true; }
+        if (request.method !== 'PATCH') { json(response, 405, { error: 'Phương thức không được hỗ trợ.' }); return true; }
+        if (request.headers['x-vibelog-user'] !== record.user.id) { json(response, 409, { error: 'Tài khoản đã thay đổi. Hãy đăng nhập lại.' }); return true; }
+        json(response, 200, await updateUserProfile(userDataStore, record.user.id, await readBody(request)));
+        return true;
+      }
+      if (path === "/api/user/data") {
+        if (!record.user) { json(response, 401, { error: "Hãy đăng nhập Google lại để tạo tài khoản VibeLog." }); return true; }
+        if (!userDataStore) { json(response, 503, { error: "Kho dữ liệu tài khoản chưa sẵn sàng." }); return true; }
+        if (request.method === "GET") { json(response, 200, await userDataStore.get(record.user.id)); return true; }
+        if (request.method === "PUT") {
+          if (request.headers["x-vibelog-user"] !== record.user.id) { json(response, 409, { error: "Tài khoản đã thay đổi. Tải lại trang trước khi lưu." }); return true; }
+          const body = validateUserData(await readBody(request));
+          const result = await userDataStore.put(record.user.id, body);
+          if (!result) json(response, 409, { error: "Dữ liệu đã đổi trên thiết bị khác. Xuất bản nháp rồi tải lại dữ liệu cloud." });
+          else json(response, 200, result);
+          return true;
+        }
+        json(response, 405, { error: "Phương thức không được hỗ trợ." }); return true;
+      }
+      if (path === "/api/auth/disconnect" && request.method === "POST") {
+        const disconnected = record.user ? await disableCalendar(id, true) : record;
+        if (!record.user) { await store.delete(id); response.setHeader("Set-Cookie", cookie("vibelog_session", "", 0)); }
         let revoked = false;
         try {
-          const result = await fetcher("https://oauth2.googleapis.com/revoke", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ token: record.refreshToken }), signal: AbortSignal.timeout(10000) });
+          const result = await fetcher("https://oauth2.googleapis.com/revoke", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ token: disconnected?.refreshToken ?? record.refreshToken }), signal: AbortSignal.timeout(10000) });
           revoked = result.ok;
         } catch { /* Local disconnection remains effective when Google is offline. */ }
         json(response, 200, { connected: false, revoked });
         return true;
       }
+      if (record.calendarGranted === false) { json(response, 401, { error: "Hãy cấp lại quyền Google Calendar. Tài khoản và nhật ký vẫn được giữ." }); return true; }
       const match = /^\/api\/calendar\/events(?:\/([0-9a-v]{5,1024}))?$/.exec(path);
       if (!match || !(request.method === "GET" && !match[1] || request.method === "POST" && !match[1] || request.method === "PATCH" && match[1])) {
         json(response, 404, { error: "Không tìm thấy thao tác này." }); return true;
@@ -181,13 +233,16 @@ export function createGoogleAuth({ origin, clientId, clientSecret, store, fetche
       if (result.status === 401) result = await call(true);
       if (!await store.get(id)) { json(response, 401, { error: "Kết nối Google đã bị ngắt." }); return true; }
       if (!result.ok) {
-        if (result.status === 401) await store.delete(id);
+        if (result.status === 401) {
+          const current = await store.get(id);
+          if (current) await store.replace(id, current, { ...current, calendarGranted: false });
+        }
         const messages = { 401: "Google yêu cầu kết nối lại.", 403: "Google từ chối quyền lịch. Kiểm tra Calendar API và quyền truy cập.", 404: "Chưa có sự kiện này.", 409: "Sự kiện đã tồn tại.", 410: "Sự kiện đã bị xóa trên Google.", 429: "Google đang giới hạn yêu cầu. Thử lại sau." };
         json(response, result.status, { error: messages[result.status] ?? "Google chưa xử lý được yêu cầu. Thử lại sau." });
       } else json(response, 200, await result.json());
       return true;
     } catch (error) {
-      json(response, error.status ?? 502, { error: error.status === 401 || error.status === 400 || error.status === 413 ? error.message : "Chưa kết nối được với Google. Dữ liệu vẫn được giữ; thử lại sau." });
+      json(response, error.status ?? 502, { error: error.status === 401 || error.status === 400 || error.status === 413 ? error.message : path.startsWith('/api/user/') ? 'Chưa lưu được dữ liệu. Ứng dụng sẽ tự thử lại.' : "Chưa kết nối được với Google. Dữ liệu vẫn được giữ; thử lại sau." });
       return true;
     }
   }

@@ -27,6 +27,7 @@
     <link rel="stylesheet" href="src/apple-design.css" />
     <link rel="stylesheet" href="src/design-effects.css" />
     <link rel="stylesheet" href="src/interface-motion.css" />
+    <link rel="stylesheet" href="src/account.css" />
   </head>
   <body>
     <div id="page-background" class="page-background" aria-hidden="true"></div>
@@ -43,8 +44,35 @@
             <span data-icon="waves" aria-hidden="true"></span>
             <span class="motion-status" aria-hidden="true"></span>
           </button>
+          <div id="account-panel" class="nav-account" aria-label="Tài khoản" hidden>
+            <button id="account-trigger" class="account-trigger" type="button" aria-label="Mở menu tài khoản" aria-haspopup="menu" aria-expanded="false" aria-controls="account-menu">
+              <span id="account-avatar" class="account-avatar" data-tone="0" aria-hidden="true"><span data-icon="user"></span></span>
+              <span id="account-trigger-name" class="account-trigger-name">Đăng nhập</span>
+              <span class="account-chevron" data-icon="chevron" aria-hidden="true"></span>
+              <span id="account-sync-dot" class="account-sync-dot" data-state="device" aria-hidden="true"></span>
+            </button>
+          </div>
         </div>
       </nav>
+    <div id="account-menu" class="account-menu" popover="auto" role="menu" aria-label="Thao tác tài khoản">
+      <div class="account-menu-heading" role="presentation">
+        <p class="account-menu-eyebrow">KHÔNG GIAN CỦA BẠN</p>
+        <strong id="account-menu-name">Chào bạn</strong>
+        <p id="account-status" role="status">Đang kiểm tra tài khoản…</p>
+      </div>
+      <div class="account-menu-sync" role="presentation"><span data-icon="check" aria-hidden="true"></span><p id="account-sync" role="status" aria-live="polite"></p></div>
+      <button id="account-edit" class="account-menu-item" type="button" role="menuitem" hidden disabled><span data-icon="edit"></span>Chỉnh sửa hồ sơ</button>
+      <a id="account-backup" class="account-menu-item" href="#" download="vibelog-account-backup.json" role="menuitem" hidden><span data-icon="download"></span>Sao lưu toàn bộ dữ liệu</a>
+      <button id="account-import" class="account-menu-item" type="button" role="menuitem" hidden><span data-icon="plus"></span>Nhập dữ liệu cũ vào tài khoản</button>
+      <button id="account-retry" class="account-menu-item" type="button" role="menuitem" hidden><span data-icon="refresh"></span>Thử đồng bộ lại</button>
+      <button id="account-export" class="account-menu-item" type="button" role="menuitem" hidden><span data-icon="download"></span>Xuất bản nháp</button>
+      <button id="account-reload" class="account-menu-item" type="button" role="menuitem" hidden><span data-icon="refresh"></span>Tải lại dữ liệu cloud</button>
+      <div class="account-menu-footer" role="presentation">
+        <button id="account-login" class="account-menu-item" type="button" role="menuitem" disabled><span data-icon="user"></span><span id="account-login-label">Đăng nhập Google</span></button>
+        <button id="account-logout" class="account-menu-item account-menu-danger" type="button" role="menuitem" hidden><span data-icon="logout"></span>Đăng xuất</button>
+      </div>
+    </div>
+    <div id="account-notice" class="container account-notice" role="status" hidden><p id="account-notice-text"></p><button id="account-notice-open" class="secondary-button" type="button">Mở tài khoản</button></div>
     <header class="hero">
       <div class="hero-content container">
         <div class="hero-story">
@@ -391,6 +419,27 @@
       <button id="toast-dismiss" type="button" aria-label="Đóng thông báo"><span data-icon="close"></span></button>
     </div>
     <button id="back-to-top" class="back-to-top" type="button" aria-label="Về đầu trang" title="Về đầu trang"><span data-icon="arrowUp" aria-hidden="true"></span></button>
+    <dialog id="profile-dialog" class="profile-dialog" aria-labelledby="profile-title" aria-describedby="profile-description" data-lenis-prevent>
+      <button id="profile-close" class="dialog-close" type="button" aria-label="Đóng chỉnh sửa hồ sơ"><span data-icon="close"></span></button>
+      <p class="profile-eyebrow">MỘT CHÚT VỀ BẠN</p>
+      <h2 id="profile-title">Hồ sơ của bạn</h2>
+      <p id="profile-description">Tên và avatar sẽ theo bạn trên các thiết bị đăng nhập cùng tài khoản.</p>
+      <div class="profile-identity"><span id="profile-preview" class="account-avatar profile-avatar" data-tone="0" aria-hidden="true">V</span><div><span class="profile-email-label">TÀI KHOẢN GOOGLE</span><p id="profile-email"></p></div></div>
+      <form id="profile-form" novalidate>
+        <label class="profile-name-label" for="profile-name">Tên hiển thị</label>
+        <input id="profile-name" name="displayName" type="text" maxlength="60" autocomplete="nickname" placeholder="Bạn muốn được gọi là gì?" required />
+        <fieldset class="profile-avatar-options"><legend>Chọn avatar</legend>
+          <label title="Chữ cái tên"><input type="radio" name="avatar" value="initials" checked /><span aria-hidden="true">Aa</span><span class="visually-hidden">Chữ cái tên</span></label>
+          <label title="Mầm cây"><input type="radio" name="avatar" value="sprout" /><span aria-hidden="true">🌱</span><span class="visually-hidden">Mầm cây</span></label>
+          <label title="Tên lửa"><input type="radio" name="avatar" value="rocket" /><span aria-hidden="true">🚀</span><span class="visually-hidden">Tên lửa</span></label>
+          <label title="Sách"><input type="radio" name="avatar" value="book" /><span aria-hidden="true">📚</span><span class="visually-hidden">Sách</span></label>
+          <label title="Hành tinh"><input type="radio" name="avatar" value="planet" /><span aria-hidden="true">🪐</span><span class="visually-hidden">Hành tinh</span></label>
+          <label title="Mèo"><input type="radio" name="avatar" value="cat" /><span aria-hidden="true">🐱</span><span class="visually-hidden">Mèo</span></label>
+        </fieldset>
+        <p id="profile-feedback" class="profile-feedback" role="status" aria-live="polite"></p>
+        <div class="profile-actions"><button id="profile-cancel" class="secondary-button" type="button">Hủy</button><button id="profile-save" class="primary-button" type="submit">Lưu hồ sơ</button></div>
+      </form>
+    </dialog>
     <dialog id="command-palette" class="command-palette" aria-labelledby="command-title" data-lenis-prevent>
       <div class="command-heading"><h2 id="command-title">Bạn muốn làm gì?</h2><button id="command-close" class="dialog-close" type="button" aria-label="Đóng tìm nhanh"><span data-icon="close"></span></button></div>
       <div class="command-search"><span data-icon="search"></span><input id="command-input" type="text" role="combobox" aria-label="Tìm nhật ký hoặc thao tác" aria-controls="command-results" aria-expanded="true" aria-autocomplete="list" autocomplete="off" placeholder="Tìm nhật ký, tag hoặc thao tác…" /></div>

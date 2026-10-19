@@ -1,5 +1,7 @@
 # Chuyển VibeLog sang Vercel + Supabase
 
+**Cập nhật 19/10/2026:** đã thêm mã tài khoản dùng danh tính Google và bảng dữ liệu người dùng trên Supabase. Xem [tài khoản và kiểm thử](accounts-and-testing.md). Nội dung dưới ghi nhận deployment ngày 15/10, trước khi deploy tính năng tài khoản mới.
+
 Vercel thay phần website/API của Render. Supabase PostgreSQL thay kho phiên của Neon. Việc đổi database đơn lẻ không giải quyết hàng đợi deploy của hosting. Không có nền tảng miễn phí nào bảo đảm mọi lần deploy đều tức thời.
 
 ## Tình trạng triển khai ngày 15/10/2026

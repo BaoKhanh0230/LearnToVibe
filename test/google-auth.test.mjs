@@ -29,6 +29,7 @@ async function setup(t, { configured = true, postgres = false, secure = false } 
   let revoked = false;
   const fetcher = async (url, options) => {
     calls.push({ url: String(url), options });
+    if (String(url).endsWith('/userinfo')) return jsonResponse({ sub: 'google-user-123', email: 'student@example.test', name: 'Student' });
     if (String(url).endsWith("/token")) {
       const params = new URLSearchParams(options.body);
       assert.equal(params.get("client_secret"), secret);
@@ -212,15 +213,16 @@ test("ghi lịch và ngắt kết nối cần Origin cùng CSRF, từ chối pro
   assert.equal("attendees" in forwarded, false);
 });
 
-test("ngắt kết nối thu hồi quyền và không khôi phục sau khi khởi động lại", async t => {
+test("ngắt Calendar thu hồi quyền, giữ tài khoản và không khôi phục lịch sau restart", async t => {
   const app = await setup(t);
   const session = await app.connect();
   const result = await app.request("/api/auth/disconnect", { method: "POST", cookie: session.cookie, csrf: session.csrf });
   assert.equal(result.status, 200);
   assert.equal(app.revoked, true);
-  assert.match(result.headers["set-cookie"][0], /Max-Age=0/);
+  assert.equal(result.headers["set-cookie"], undefined);
   await app.restart();
   assert.equal((await app.request("/api/auth/status", { cookie: session.cookie })).data.connected, false);
+  assert.equal((await app.request("/api/auth/status", { cookie: session.cookie })).data.user.email, 'student@example.test');
 });
 
 test("máy chủ không phục vụ secrets, file phiên, Git hoặc source máy chủ", async t => {
@@ -231,7 +233,7 @@ test("máy chủ không phục vụ secrets, file phiên, Git hoặc source máy
 
 test("chưa cấu hình vẫn mở app và báo cách thiết lập", async t => {
   const app = await setup(t, { configured: false });
-  assert.deepEqual((await app.request("/api/auth/status")).data, { configured: false, connected: false });
+  assert.deepEqual((await app.request("/api/auth/status")).data, { configured: false, connected: false, user: null, cloudAvailable: true });
   assert.equal((await app.request("/api/auth/connect", { method: "POST" })).status, 503);
   assert.equal((await app.request("/")).status, 200);
 });

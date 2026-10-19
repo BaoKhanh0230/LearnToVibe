@@ -1,6 +1,22 @@
 # Nhật ký học tập và tiến độ VibeLog
 
-Đây là trang trung tâm để tiếp tục project ở những buổi học sau. Cập nhật gần nhất: **15/10/2026**, múi giờ Asia/Bangkok.
+Đây là trang trung tâm để tiếp tục project ở những buổi học sau. Cập nhật gần nhất: **19/10/2026**, múi giờ Asia/Bangkok.
+
+## Buổi 19/10/2026 — Từ dữ liệu trình duyệt sang dữ liệu tài khoản
+
+- Đã bổ sung nhận diện Google bằng `sub`, ID ổn định, lưu nhật ký/kế hoạch/mục tiêu/nhắc học theo tài khoản, đồng bộ có version và nhập local có xác nhận.
+- Đánh giá Supabase Auth và giữ luồng Google OAuth máy chủ đã có: Supabase tiếp tục là PostgreSQL, không có `auth.users` hay khóa service_role ở frontend.
+- Đã tạo bảng `vibelog_user_data` với role NOLOGIN/NOBYPASSRLS, FORCE RLS, policy chủ sở hữu và chặn Data API. Kiểm thử RLS thật bằng dữ liệu giả trong transaction rollback đạt; security advisor không có lỗi bảng mới.
+- Ngắt Calendar giữ tài khoản/nhật ký; đăng xuất xóa phiên thiết bị. Gia hạn quyền lịch thất bại không xóa dữ liệu học.
+- 85 bài kiểm thử tự động đạt; build Pages đạt, audit production cuối buổi 0 lỗ hổng. Phát hành GitHub/Vercel đang thực hiện theo yêu cầu; kết quả sẽ ghi ở phần phát hành bên dưới.
+- Chủ tài khoản xác nhận đổi mạng giúp kiểm tra cổng Supabase thành công sau lỗi timeout khi chạy local.
+- Đã chuyển tài khoản lên thanh điều hướng, thêm menu avatar, hồ sơ (tên/avatar có sẵn) lưu theo tài khoản, sao lưu toàn bộ và cảnh báo đồng bộ ngoài menu. Không thay schema database.
+- Chrome desktop/mobile đã kiểm tra menu, bàn phím, chỉnh hồ sơ qua API, tải lại trong context mới, tách tài khoản B, sao lưu và đăng xuất. Test dùng phiên giả/kho riêng, không sửa dữ liệu cá nhân. Đã sửa lỗi focus làm menu đóng sớm khi bấm mục khác.
+- Sửa UX lưu hồ sơ: PATCH riêng, giữ dữ liệu nhật ký, tự giải quyết race version và tự thử lại; báo thành công sau xác nhận, không bắt user đồng bộ thủ công. Profile offline lưu cục bộ theo tài khoản và tự gửi lại; tự phục hồi draft profile từ luồng cũ. Chrome đã kiểm tra 503 tạm thời, offline/online và khôi phục draft, đều đạt.
+- Chủ tài khoản đã thử đăng nhập, tạo nhật ký, đăng xuất và đổi tài khoản. Sau bản sửa profile, chủ tài khoản xác nhận “mọi thứ đã chạy ổn”. Ghi nhận là nghiệm thu local; chưa suy rộng thành đã test mọi luồng production, Calendar write hoặc nhiều thiết bị vật lý.
+- Hướng dẫn đầy đủ: [tài khoản, cách hoạt động và test](accounts-and-testing.md).
+- Tổng kết kiến thức, khác biệt môi trường doanh nghiệp và bài tập: [bài giảng 19/10](lesson-2026-10-19.md).
+- Buổi tiếp theo ưu tiên SQL/thiết kế quan hệ trên database dev riêng, rồi CRUD từng nhật ký + RLS và migration có kiểm thử. Nghiệm thu production bằng A/B, profile và hai trình duyệt; Calendar write thật vẫn là mục riêng cần kiểm tra. Mốc “ngày mai 16/10” bên dưới thuộc kế hoạch lịch sử; buổi triển khai thực tế là 19/10.
 
 ## Cách cập nhật sau mỗi buổi
 
@@ -10,7 +26,7 @@
 4. Cập nhật phần còn thiếu và kế hoạch; ghi quyết định hoặc giới hạn cần nhớ.
 5. Commit/push ghi chú cùng các thay đổi cần thiết. Không ghi mật khẩu, token, connection string, cookie hoặc dữ liệu Calendar/nhật ký cá nhân.
 
-## Trạng thái hiện tại
+## Trạng thái deployment trước buổi tài khoản (15/10)
 
 Website chính thức: **https://vibelog-baokhanh.vercel.app/**.
 

@@ -2,6 +2,7 @@ import { sessionRange } from "./calendar.js";
 import { DeploymentGoogleCalendar } from "./calendar-deployment.js";
 import { initializeWeekCalendar } from "./calendar-week.js";
 import { confirmAction } from "./notifications.js";
+import { userStorage as localStorage } from './user-storage.js';
 
 export function initializeCalendarUI(showToast) {
   const query = (selector) => document.querySelector(selector);
@@ -28,7 +29,7 @@ export function initializeCalendarUI(showToast) {
   function renderConnection() {
     const browser = calendar.mode === "browser";
     disconnect.hidden = !calendar.connected;
-    connect.textContent = calendar.connected ? "Đổi tài khoản Google" : "Kết nối Google Calendar";
+    connect.textContent = calendar.connected ? "Đổi tài khoản Google" : "Đăng nhập / cấp quyền Calendar";
     status.textContent = calendar.connected
       ? browser ? "Đã kết nối với lịch của tài khoản bạn chọn." : "Đã kết nối lâu dài. Lịch tự tải khi mở lại app."
       : calendar.configured ? "Nhấn Kết nối Google Calendar để xem và đặt lịch của bạn." : "Website chưa được cấu hình kết nối Google. Vui lòng liên hệ chủ website.";

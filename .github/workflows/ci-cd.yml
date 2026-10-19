@@ -30,7 +30,7 @@ jobs:
         run: npm ci
 
       - name: Check PostgreSQL integration syntax
-        run: node --check scripts/postgres-session-store.mjs && node --check scripts/calendar-validation.mjs && node --check scripts/verify-cloud-sessions.mjs && node --check scripts/verify-deployment.mjs
+        run: node --check scripts/postgres-session-store.mjs && node --check scripts/user-data.mjs && node --check scripts/setup-user-data.mjs && node --check src/account.js && node --check src/account-menu.js && node --check src/profile.js && node --check src/profile-sync.js && node --check src/user-storage.js && node --check scripts/calendar-validation.mjs && node --check scripts/verify-cloud-sessions.mjs && node --check scripts/verify-deployment.mjs
 
       - name: Audit production dependencies
         run: npm audit --omit=dev --audit-level=high

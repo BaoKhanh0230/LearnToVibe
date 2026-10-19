@@ -5,6 +5,7 @@ import { pathToFileURL } from "node:url";
 import { SessionStore } from "./session-store.mjs";
 import { createGoogleAuth, json } from "./google-auth.mjs";
 import { connectPostgresStore } from "./postgres-session-store.mjs";
+import { LocalUserDataStore, PostgresUserDataStore } from "./user-data.mjs";
 
 const contentTypes = {
   ".css": "text/css; charset=utf-8", ".html": "text/html; charset=utf-8",
@@ -17,14 +18,15 @@ export function createVibeLogHandler({
   root = process.cwd(), origin = process.env.APP_URL || "http://localhost:4173",
   clientId = process.env.GOOGLE_CLIENT_ID, clientSecret = process.env.GOOGLE_CLIENT_SECRET,
   dataDirectory = resolve(root, ".vibelog-data"), fetcher = globalThis.fetch,
-  sessionStore,
+  sessionStore, userDataStore,
 } = {}) {
   origin = new URL(origin).origin;
   const appUrl = new URL(origin);
   if (appUrl.protocol !== "https:" && !(appUrl.protocol === "http:" && ["localhost", "127.0.0.1", "[::1]"].includes(appUrl.hostname))) throw new Error("APP_URL phải dùng HTTPS, hoặc HTTP trên localhost.");
   const absoluteRoot = realpathSync(root);
   const store = sessionStore ?? new SessionStore(dataDirectory);
-  const auth = createGoogleAuth({ origin, clientId, clientSecret, store, fetcher });
+  userDataStore ??= store.pool ? new PostgresUserDataStore(store.pool) : new LocalUserDataStore(store);
+  const auth = createGoogleAuth({ origin, clientId, clientSecret, store, userDataStore, fetcher });
   return async (request, response) => {
     response.setHeader("X-Content-Type-Options", "nosniff");
     response.setHeader("Referrer-Policy", "same-origin");

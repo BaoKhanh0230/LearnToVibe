@@ -23,6 +23,9 @@ import { initializeNotifications, notify, confirmAction } from "./notifications.
 import { initializeCommandPalette } from "./command-palette.js";
 import { initializeFormValidation } from "./form-validation.js";
 import { initializeDropdowns, syncDropdowns } from "./dropdowns.js";
+import { initializeAccount } from './account.js';
+
+await initializeAccount();
 
 const moodLabels = {
   flow: "✨ Vào guồng",

@@ -2,7 +2,11 @@
 
 **Theo dõi buổi học và project:** [Nhật ký học tập, trạng thái hiện tại và kế hoạch buổi tiếp theo](docs/learning-log.md). Đọc trang này khi tiếp tục project; cập nhật sau mỗi buổi để phân biệt phần đã làm, đã kiểm chứng và còn thiếu.
 
-VibeLog là nhật ký nhỏ dành cho hành trình học và vibe code. Bạn có thể ghi lại mình vừa làm gì, học trong bao lâu, cảm thấy thế nào và rút ra điều gì. Dữ liệu được lưu trong trình duyệt bằng `localStorage`.
+VibeLog là nhật ký nhỏ dành cho hành trình học và vibe code. Bạn có thể ghi lại mình vừa làm gì, học trong bao lâu, cảm thấy thế nào và rút ra điều gì. Chế độ thiết bị dùng `localStorage`; bản Node/Vercel mới hỗ trợ đăng nhập Google, lưu nhật ký/kế hoạch theo tài khoản và đồng bộ qua máy chủ.
+
+**Bài tài khoản ngày 19/10/2026:** xem [cách hoạt động, thiết lập và kịch bản test chi tiết](docs/accounts-and-testing.md). Mã mới dùng danh tính Google và Supabase PostgreSQL, chưa chuyển sang Supabase Auth. Bảng dữ liệu đã tạo trên Supabase; mã ứng dụng mới chưa deploy Vercel. Phần kết nối Calendar dưới đây giữ thông tin triển khai cũ; dữ liệu tài khoản và hành vi ngắt lịch mới được mô tả trong bài tài khoản.
+
+Tài khoản nằm ở góc phải thanh trên cùng. Bấm avatar để chỉnh sửa tên/avatar, sao lưu toàn bộ dữ liệu, nhập dữ liệu local, đổi tài khoản hoặc đăng xuất. Hồ sơ đồng bộ theo tài khoản; lỗi đồng bộ có cảnh báo ngoài menu.
 
 Bạn cũng có thể sửa, tìm kiếm và lọc các phiên học đã ghi. Hình Doro trong thư mục `image` được dùng làm favicon và biểu tượng của dự án.
 

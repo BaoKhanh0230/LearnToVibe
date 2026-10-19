@@ -1,8 +1,9 @@
+import { userStorage } from './user-storage.js';
 export const STORAGE_KEY = "vibelog.entries.v1";
 export const WEEKLY_GOAL_KEY = "vibelog.weeklyGoal.v1";
 export const REMINDER_KEY = "vibelog.reminder.v1";
 
-export function loadEntries(storage = localStorage) {
+export function loadEntries(storage = userStorage) {
   try {
     const value = JSON.parse(storage.getItem(STORAGE_KEY) ?? "[]");
     return Array.isArray(value) ? value : [];
@@ -11,20 +12,20 @@ export function loadEntries(storage = localStorage) {
   }
 }
 
-export function saveEntries(entries, storage = localStorage) {
+export function saveEntries(entries, storage = userStorage) {
   storage.setItem(STORAGE_KEY, JSON.stringify(entries));
 }
 
-export function loadWeeklyGoal(storage = localStorage) {
+export function loadWeeklyGoal(storage = userStorage) {
   const value = Number(storage.getItem(WEEKLY_GOAL_KEY));
   return Number.isFinite(value) && value >= 30 && value <= 10080 ? value : 180;
 }
 
-export function saveWeeklyGoal(goal, storage = localStorage) {
+export function saveWeeklyGoal(goal, storage = userStorage) {
   storage.setItem(WEEKLY_GOAL_KEY, String(goal));
 }
 
-export function loadReminder(storage = localStorage) {
+export function loadReminder(storage = userStorage) {
   const fallback = { enabled: false, time: "20:00", days: [1, 2, 3, 4, 5] };
   try {
     const value = JSON.parse(storage.getItem(REMINDER_KEY) ?? "null");
@@ -39,7 +40,7 @@ export function loadReminder(storage = localStorage) {
   }
 }
 
-export function saveReminder(reminder, storage = localStorage) {
+export function saveReminder(reminder, storage = userStorage) {
   storage.setItem(REMINDER_KEY, JSON.stringify(reminder));
 }
 
