@@ -8,4 +8,8 @@ _site/
 .env.*
 !.env.example
 .vibelog-data/
+.vercel/
 
+
+.vercel
+.env*

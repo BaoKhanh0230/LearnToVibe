@@ -1,0 +1,9 @@
+.env
+.env.*
+.vibelog-data/
+.git/
+.github/
+node_modules/
+_site/
+test/
+docs/
