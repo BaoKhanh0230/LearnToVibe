@@ -4,7 +4,7 @@
 
 VibeLog là nhật ký nhỏ dành cho hành trình học và vibe code. Bạn có thể ghi lại mình vừa làm gì, học trong bao lâu, cảm thấy thế nào và rút ra điều gì. Chế độ thiết bị dùng `localStorage`; bản Node/Vercel mới hỗ trợ đăng nhập Google, lưu nhật ký/kế hoạch theo tài khoản và đồng bộ qua máy chủ.
 
-**Bài tài khoản ngày 19/10/2026:** xem [cách hoạt động, thiết lập và kịch bản test chi tiết](docs/accounts-and-testing.md). Mã mới dùng danh tính Google và Supabase PostgreSQL, chưa chuyển sang Supabase Auth. Bảng dữ liệu đã tạo trên Supabase; mã ứng dụng mới chưa deploy Vercel. Phần kết nối Calendar dưới đây giữ thông tin triển khai cũ; dữ liệu tài khoản và hành vi ngắt lịch mới được mô tả trong bài tài khoản.
+**Bài tài khoản ngày 19/10/2026:** xem [cách hoạt động, thiết lập và kịch bản test chi tiết](docs/accounts-and-testing.md), [bài giảng và lộ trình học tiếp](docs/lesson-2026-10-19.md), cùng [trạng thái phát hành](docs/learning-log.md). Mã mới dùng danh tính Google và Supabase PostgreSQL, chưa chuyển sang Supabase Auth. Bảng dữ liệu đã tạo trên Supabase. Phần kết nối Calendar dưới đây giữ thông tin triển khai cũ; dữ liệu tài khoản và hành vi ngắt lịch mới được mô tả trong bài tài khoản.
 
 Tài khoản nằm ở góc phải thanh trên cùng. Bấm avatar để chỉnh sửa tên/avatar, sao lưu toàn bộ dữ liệu, nhập dữ liệu local, đổi tài khoản hoặc đăng xuất. Hồ sơ đồng bộ theo tài khoản; lỗi đồng bộ có cảnh báo ngoài menu.
 

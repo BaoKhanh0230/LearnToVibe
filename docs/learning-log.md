@@ -8,7 +8,7 @@
 - Đánh giá Supabase Auth và giữ luồng Google OAuth máy chủ đã có: Supabase tiếp tục là PostgreSQL, không có `auth.users` hay khóa service_role ở frontend.
 - Đã tạo bảng `vibelog_user_data` với role NOLOGIN/NOBYPASSRLS, FORCE RLS, policy chủ sở hữu và chặn Data API. Kiểm thử RLS thật bằng dữ liệu giả trong transaction rollback đạt; security advisor không có lỗi bảng mới.
 - Ngắt Calendar giữ tài khoản/nhật ký; đăng xuất xóa phiên thiết bị. Gia hạn quyền lịch thất bại không xóa dữ liệu học.
-- 85 bài kiểm thử tự động đạt; build Pages đạt, audit production cuối buổi 0 lỗ hổng. Phát hành GitHub/Vercel đang thực hiện theo yêu cầu; kết quả sẽ ghi ở phần phát hành bên dưới.
+- 85 bài kiểm thử tự động đạt; build Pages/production đạt, audit production cuối buổi 0 lỗ hổng. Đã commit/push GitHub; kết quả phát hành ở phần bên dưới.
 - Chủ tài khoản xác nhận đổi mạng giúp kiểm tra cổng Supabase thành công sau lỗi timeout khi chạy local.
 - Đã chuyển tài khoản lên thanh điều hướng, thêm menu avatar, hồ sơ (tên/avatar có sẵn) lưu theo tài khoản, sao lưu toàn bộ và cảnh báo đồng bộ ngoài menu. Không thay schema database.
 - Chrome desktop/mobile đã kiểm tra menu, bàn phím, chỉnh hồ sơ qua API, tải lại trong context mới, tách tài khoản B, sao lưu và đăng xuất. Test dùng phiên giả/kho riêng, không sửa dữ liệu cá nhân. Đã sửa lỗi focus làm menu đóng sớm khi bấm mục khác.
@@ -17,6 +17,15 @@
 - Hướng dẫn đầy đủ: [tài khoản, cách hoạt động và test](accounts-and-testing.md).
 - Tổng kết kiến thức, khác biệt môi trường doanh nghiệp và bài tập: [bài giảng 19/10](lesson-2026-10-19.md).
 - Buổi tiếp theo ưu tiên SQL/thiết kế quan hệ trên database dev riêng, rồi CRUD từng nhật ký + RLS và migration có kiểm thử. Nghiệm thu production bằng A/B, profile và hai trình duyệt; Calendar write thật vẫn là mục riêng cần kiểm tra. Mốc “ngày mai 16/10” bên dưới thuộc kế hoạch lịch sử; buổi triển khai thực tế là 19/10.
+
+### Phát hành cuối buổi
+
+- Commit ứng dụng: [`cc076a653b43e6e71a01b094714a0e4267140b04`](https://github.com/BaoKhanh0230/LearnToVibe/commit/cc076a653b43e6e71a01b094714a0e4267140b04), đã push `origin/main`.
+- [GitHub Actions run 39236017194](https://github.com/BaoKhanh0230/LearnToVibe/actions/runs/39236017194): Test VibeLog và Deploy to GitHub Pages đều success.
+- Đã đọc lại website Pages công khai: HTTP 200 và có menu tài khoản mới. Domain Vercel trả 200 nhưng chưa có menu mới, xác nhận production vẫn ở bản trước.
+- Kiểm tra trước release: không phát hiện giá trị secret local trong 88 file ứng viên; `.env`, dữ liệu phiên, draft và ảnh browser không nằm trong commit. Database xác nhận role hạn chế, FORCE RLS và chặn SELECT của anon/authenticated.
+- Vercel chưa phát hành bản mới tại thời điểm ghi dòng này: công cụ trả 403 do thiếu quyền scope `merikatori`. Không có CLI đã đăng nhập để dùng thay thế. Chủ tài khoản chọn kết nối lại Vercel đúng tài khoản; cần tiếp tục phát hành đúng commit ứng dụng và chạy smoke test production sau khi kết nối có quyền.
+- Không coi việc push GitHub/Pages success là Vercel đã cập nhật. Không thay token/secret hoặc chọn project khác để vượt lỗi quyền.
 
 ## Cách cập nhật sau mỗi buổi
 
@@ -95,7 +104,7 @@ Tài liệu ngày này là lịch sử nền tảng cũ, không phải địa ch
 
 ## Kế hoạch buổi 16/10/2026 — Tài khoản và dữ liệu theo người dùng
 
-Đây là kế hoạch, **chưa triển khai** và chưa tạo bảng/tài khoản mới cho các tính năng dưới đây.
+Đây là kế hoạch lịch sử lập ở buổi 15/10, lúc đó chưa triển khai. Phần thực hiện và quyết định cuối cùng nằm ở buổi **19/10/2026** phía trên; không dùng phần kế hoạch này làm trạng thái hiện tại.
 
 Mục tiêu do người dùng đặt: đăng nhập, lưu nhật ký/kế hoạch học theo tài khoản; đăng nhập Google và có quyền Calendar thì tự hiển thị lịch của đúng tài khoản đó.
 
