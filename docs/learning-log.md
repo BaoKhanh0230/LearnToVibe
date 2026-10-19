@@ -22,10 +22,12 @@
 
 - Commit ứng dụng: [`cc076a653b43e6e71a01b094714a0e4267140b04`](https://github.com/BaoKhanh0230/LearnToVibe/commit/cc076a653b43e6e71a01b094714a0e4267140b04), đã push `origin/main`.
 - [GitHub Actions run 39236017194](https://github.com/BaoKhanh0230/LearnToVibe/actions/runs/39236017194): Test VibeLog và Deploy to GitHub Pages đều success.
-- Đã đọc lại website Pages công khai: HTTP 200 và có menu tài khoản mới. Domain Vercel trả 200 nhưng chưa có menu mới, xác nhận production vẫn ở bản trước.
+- Đã đọc lại website Pages công khai: HTTP 200 và có menu tài khoản mới. Sau khi phát hành bằng CLI, domain Vercel cũng đã có menu và hồ sơ mới.
 - Kiểm tra trước release: không phát hiện giá trị secret local trong 88 file ứng viên; `.env`, dữ liệu phiên, draft và ảnh browser không nằm trong commit. Database xác nhận role hạn chế, FORCE RLS và chặn SELECT của anon/authenticated.
-- Vercel chưa phát hành bản mới tại thời điểm ghi dòng này: công cụ trả 403 do thiếu quyền scope `merikatori`. Không có CLI đã đăng nhập để dùng thay thế. Chủ tài khoản chọn kết nối lại Vercel đúng tài khoản; cần tiếp tục phát hành đúng commit ứng dụng và chạy smoke test production sau khi kết nối có quyền.
-- Không coi việc push GitHub/Pages success là Vercel đã cập nhật. Không thay token/secret hoặc chọn project khác để vượt lỗi quyền.
+- Kết nối Vercel trong Codex trả 403 scope `merikatori`. Chủ tài khoản đã xác thực Vercel CLI qua device flow; CLI xác nhận đúng project `prj_WP8kAr2WCctB4azJslBJCIfyLs2s`. Đây là kết nối CLI riêng, không khẳng định connector đã hết lỗi.
+- Đã phát hành source tại commit `f460f7d` bằng CLI: deployment [`dpl_FnzJHXYXg47zUwiiDoUpWPvJ1zxs`](https://vercel.com/merikatori/vibelog-baokhanh/FnzJHXYXg47zUwiiDoUpWPvJ1zxs) đạt READY, production alias [vibelog-baokhanh.vercel.app](https://vibelog-baokhanh.vercel.app/).
+- `node scripts/verify-deployment.mjs https://vibelog-baokhanh.vercel.app` đạt: menu/profile assets, cloud data configuration, API dữ liệu/hồ sơ ẩn danh 401, cookie bảo mật, PKCE, Origin lạ 403, file riêng 404, sitemap/robots và hủy OAuth state/chặn replay trên database triển khai. Chưa thay thế nghiệm thu đăng nhập Google thật, sửa hồ sơ, A/B và hai trình duyệt trên production.
+- Thêm `.vercelignore`, bỏ qua `.vercel/` trong Git; dry run xác nhận `.env`, `.env.local`, dữ liệu local và cấu hình CLI không được upload. Cấu hình CLI nằm trong `.vibelog-data/vercel-cli` đã bỏ qua Git để tránh lỗi ghi cấu hình mặc định EXDEV trên Windows.
 
 ## Cách cập nhật sau mỗi buổi
 

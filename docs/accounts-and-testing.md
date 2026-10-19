@@ -8,7 +8,7 @@
 - Security advisor không báo vấn đề ở bảng mới. Thông báo INFO ở bảng phiên cũ không có policy là chủ ý: bảng này chặn toàn bộ Data API, chỉ máy chủ truy cập.
 - 85 bài kiểm thử tự động đạt, gồm API hồ sơ riêng, tự thử lại, phục hồi draft profile cũ, chống mất avatar mới khi retry và điều hướng menu. Build Pages đạt; audit production đạt ở bài tài khoản ban đầu (0 lỗ hổng).
 - Đã kiểm tra Chrome thật trên desktop và mobile: sửa hồ sơ qua API, tải lại ở browser context mới, tách tài khoản B, download sao lưu, đăng xuất, bàn phím và menu fallback. Bài browser dùng phiên giả và kho dữ liệu kiểm thử riêng trong bộ nhớ; không truy cập dữ liệu Google hay database production.
-- Mã nguồn đã push GitHub ở commit `cc076a6`; CI và Pages deploy success. Vercel chưa nhận bản mới tại thời điểm ghi nhận vì công cụ deploy thiếu quyền scope; chủ tài khoản đang kết nối lại. Xem [nhật ký phát hành](learning-log.md) để tiếp tục đúng trạng thái.
+- Mã nguồn ứng dụng đã push GitHub ở commit `cc076a6`; CI và Pages deploy success. Vercel production đã cập nhật qua CLI với source commit `f460f7d`, deployment READY và smoke test đạt trên [domain chính](https://vibelog-baokhanh.vercel.app/). Đăng nhập Google thật và thao tác A/B trên production cần nghiệm thu riêng. Xem [nhật ký phát hành](learning-log.md).
 
 ## Menu tài khoản và hồ sơ
 
