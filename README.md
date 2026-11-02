@@ -44,6 +44,10 @@ Workflow tại `.github/workflows/ci-cd.yml` tự động chạy khi push hoặc
 
 ## Chạy dự án
 
+### Học và chạy bằng Docker ở local
+
+Xem [bài thực hành Docker 2–4](docs/docker-practice.md): tự build VibeLog, giữ dữ liệu bằng volume và chạy cùng PostgreSQL riêng qua Compose. Chạy `docker compose up -d --build --wait` cho chế độ file, rồi mở `http://localhost:4174`. Bài Docker không tải cấu hình `.env` cloud và chưa bật Google OAuth.
+
 ## SEO và Google Search
 
 Xem [bài học và hướng dẫn Search Console](docs/seo.md). Địa chỉ chính thức hiện là https://vibelog-baokhanh.vercel.app/ với backend Vercel và kho phiên Supabase. Trang chủ và bản Pages khai báo canonical về Vercel. Sau khi deploy, thêm property URL prefix mới trong Search Console, xác minh bằng mã Google cấp cho property đó, gửi sitemap và kiểm tra URL.

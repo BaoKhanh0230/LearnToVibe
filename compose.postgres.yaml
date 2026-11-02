@@ -1,0 +1,27 @@
+# Merge with compose.yaml. Credentials below are public, local-lab values only.
+services:
+  app:
+    command: ["node", "docker/serve-postgres.mjs"]
+    environment:
+      DOCKER_LAB_POSTGRES: "1"
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_USER: vibelog_lab
+      POSTGRES_PASSWORD: local-learning-only
+      POSTGRES_DB: vibelog_lab
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./docker/init-lab.sql:/docker-entrypoint-initdb.d/01-roles.sql:ro
+      - ./scripts/user-data-schema.sql:/docker-entrypoint-initdb.d/02-user-data.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vibelog_lab -d vibelog_lab"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  db-data:

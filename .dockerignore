@@ -1,0 +1,22 @@
+# Allow only application files into the build context.
+**
+!package.json
+!package-lock.json
+!index.html
+!styles.css
+!robots.txt
+!sitemap.xml
+!src/
+!src/**
+!image/
+!image/**
+!scripts/
+!scripts/**
+!docker/
+!docker/serve-postgres.mjs
+!docker/verify-lab.mjs
+**/.env*
+**/.vibelog-data
+**/node_modules
+**/.git
+**/.vercel

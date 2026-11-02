@@ -1,0 +1,18 @@
+name: vibelog-docker-lab
+services:
+  app:
+    image: vibelog:docker-lesson
+    build: .
+    init: true
+    ports:
+      - "127.0.0.1:4174:4173"
+    environment:
+      NODE_ENV: development
+      LISTEN_HOST: 0.0.0.0
+      PORT: "4173"
+      APP_URL: http://localhost:4174
+    volumes:
+      - app-data:/app/.vibelog-data
+
+volumes:
+  app-data:

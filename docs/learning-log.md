@@ -1,6 +1,24 @@
 # Nhật ký học tập và tiến độ VibeLog
 
-Đây là trang trung tâm để tiếp tục project ở những buổi học sau. Cập nhật gần nhất: **19/10/2026**, múi giờ Asia/Bangkok.
+Đây là trang trung tâm để tiếp tục project ở những buổi học sau. Cập nhật gần nhất: **02/11/2026**, múi giờ Asia/Bangkok.
+
+## Buổi 02/11/2026 — Bắt đầu học Docker
+
+- Người học chọn Docker làm chủ đề mới, bắt đầu từ khái niệm và thực hành cơ bản.
+- Đã chuẩn bị [lộ trình và bài thực hành đầu tiên](lesson-2026-11-02-docker.md): container có sẵn → Dockerfile cho VibeLog → volume/cấu hình → Compose với PostgreSQL local riêng.
+- Máy có Docker CLI 29.2.1 và Compose v5.0.2. Engine ban đầu chưa chạy; đã khởi động Docker Desktop và kết nối được Engine 29.2.1.
+- Đã tạo container `docker-bai-1` từ image `docker/welcome-to-docker`, ánh xạ `127.0.0.1:8080:80`. Kiểm chứng container đang chạy và HTTP 200, tiêu đề “Welcome to Docker” tại `http://localhost:8080`. Giữ container chạy để người học thao tác.
+- Người học xác nhận đã trải nghiệm bài 1 và đọc lý thuyết, yêu cầu tiếp tục triển khai.
+- Đã tạo `Dockerfile`, `.dockerignore`, `compose.yaml` (file volume) và `compose.postgres.yaml` (PostgreSQL 17 local riêng). Image dùng Node.js 24, tài khoản `node`, dependency theo lockfile, healthcheck và cổng local 4174.
+- Bài PostgreSQL dùng entrypoint riêng trong `docker/`, không sửa connector TLS cloud. SQL khởi tạo dùng schema tài khoản hiện có; app dùng role local không có superuser/bypass RLS, không có quyền tạo schema. Không tải `.env` cloud hay cấu hình Google thật.
+- Đã kiểm chứng HTTP 200, assets, API trạng thái, file riêng bị chặn và không có cấu hình riêng/dev dependency trong container. Script `docker/verify-lab.mjs` ghi/đọc dữ liệu giả, kiểm tra volume file qua recreate, rồi phiên mã hóa/dữ liệu tài khoản PostgreSQL qua recreate cả hai container: đều PASS. Đây là kiểm chứng máy chủ/kho dữ liệu; chưa kiểm tra giao diện bằng browser tự động hay Google OAuth thật trong Docker.
+- `npm test` đạt 85/85 ngoài giới hạn socket sandbox; kiểm tra cú pháp các script Docker và `git diff --check` đạt.
+- Trạng thái đã kiểm chứng trước lúc kết thúc: stack PostgreSQL (`app` và `db` đều healthy) tại `http://localhost:4174`; có dữ liệu giả trong volume bài học. Đây là trạng thái lịch sử, cần kiểm tra lại khi học tiếp.
+- **Người học xác nhận đã tự chạy đến lệnh `docker compose -f compose.yaml -f compose.postgres.yaml exec -T app node docker/verify-lab.mjs check` và thấy PASS.** Đã làm được theo hướng dẫn, chưa đồng nghĩa đã nắm chắc khái niệm.
+- **Điểm dừng:** người học thấy quá nhiều thông tin, muốn tạm dừng thực hành và ôn lại Docker từ đầu bằng ví dụ gần gũi. Buổi tới ưu tiên nhịp chậm, từng khái niệm, một câu hỏi nhỏ mỗi lần; chưa thêm tính năng hay công cụ mới trước khi người học sẵn sàng.
+- Đã soạn [prompt ôn lại từ đầu](docker-review-prompt.md) để dùng trong ChatGPT; có bối cảnh VibeLog, các lệnh đã chạy và cách dạy mong muốn. [Bài thực hành 2–4](docker-practice.md) giữ lại để tra cứu.
+- Người học muốn **tự tắt Docker lần đầu**. Trợ giảng chỉ hướng dẫn dừng stack, container bài 1 và Docker Desktop; không thực hiện tắt thay. Chưa nhận xác nhận người học đã tắt. Hướng dẫn tắt/mở lại ở cuối bài thực hành.
+- Cuối buổi người học yêu cầu commit và push cấu hình Docker cùng tài liệu lên GitHub. Kết quả đồng bộ và mã commit được báo trong chat; không ghi nhận Docker đã được triển khai lên cloud.
 
 ## Buổi 19/10/2026 — Từ dữ liệu trình duyệt sang dữ liệu tài khoản
 
